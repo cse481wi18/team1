@@ -40,7 +40,7 @@ def main():
             print_usage()
             return
         pan, tilt = float(argv[2]), float(argv[3])
-        rospy.logerr('Not implemented.')
+        head.pan_tilt(pan, tilt)
     else:
         print_usage()
 

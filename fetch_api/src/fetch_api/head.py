@@ -6,10 +6,14 @@ import rospy
 import control_msgs.msg
 import geometry_msgs.msg
 import std_msgs.msg 
+import trajectory_msgs.msg
 
 from control_msgs.msg import PointHeadGoal, PointHeadAction
 from geometry_msgs.msg import PointStamped, Point
 from std_msgs.msg import Header
+from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryGoal
+from trajectory_msgs.msg import JointTrajectoryPoint, JointTrajectory
+
 
 
 LOOK_AT_ACTION_NAME = ''  # Get the name of the look-at action
@@ -38,8 +42,11 @@ class Head(object):
     MAX_TILT = math.pi/2  
 
     def __init__(self):
-        self.client = actionlib.SimpleActionClient('head_controller/point_head', PointHeadAction)
-        self.client.wait_for_server()
+        self.point_client = actionlib.SimpleActionClient('head_controller/point_head', PointHeadAction)
+        self.point_client.wait_for_server()
+
+        self.trajectory_client = actionlib.SimpleActionClient('head_controller/follow_joint_trajectory', FollowJointTrajectoryAction)
+        self.trajectory_client.wait_for_server()
 
     def look_at(self, frame_id, x, y, z):
         """Moves the head to look at a point in space.
@@ -67,10 +74,10 @@ class Head(object):
         goal.target = pointStamped
         
         # send goal and wait for result
-        self.client.send_goal(goal)
-        self.client.wait_for_result()
-        
-        return self.client.get_result()
+        self.point_client.send_goal(goal)
+        self.point_client.wait_for_result()
+
+        return self.point_client.get_result()
 
     def pan_tilt(self, pan, tilt):
         """Moves the head by setting pan/tilt angles.
@@ -79,16 +86,35 @@ class Head(object):
             pan: The pan angle, in radians. A positive value is clockwise.
             tilt: The tilt angle, in radians. A positive value is downwards.
         """
-        # TODO: Check that the pan/tilt angles are within joint limits
-        # TODO: Create a trajectory point
-        # TODO: Set positions of the two joints in the trajectory point
-        # TODO: Set time of the trajectory point
+        # Check that the pan/tilt angles are within joint limits
+        if pan < self.MIN_PAN or pan > self.MAX_PAN or tilt < self.MIN_TILT or tilt > self.MAX_TILT:
+            return
 
-        # TODO: Create goal
-        # TODO: Add joint names to the list
-        # TODO: Add trajectory point created above to trajectory
 
-        # TODO: Send the goal
-        # TODO: Wait for result
+        # Create a trajectory point (contained in JointTrajectory msg)
+        destination = JointTrajectoryPoint()
+        # Set position of trajectory point
+        destination.positions.append(pan)
+        destination.positions.append(tilt)
+        # Set time of trajectory point
+        destination.time_from_start = rospy.Duration(5)
+        
+        # Create a joint trajectory (contained in JointTrajectoryGoal)
+        trajectory = JointTrajectory()
+        # Add joint name to list
+        trajectory.joint_names.append(PAN_JOINT)
+        trajectory.joint_names.append(TILT_JOINT)
+         # Add the trajectory point created above to trajectory
+        trajectory.points.append(destination)
 
-        rospy.logerr('Not implemented.')
+        # Create goal
+        goal = control_msgs.msg.FollowJointTrajectoryGoal()
+        goal.trajectory = trajectory
+        # Send goal
+        self.trajectory_client.send_goal(goal)
+        # Wait for result
+        self.trajectory_client.wait_for_result()
+
+        return self.trajectory_client.get_result()
+
+   
