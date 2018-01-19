@@ -7,7 +7,7 @@ import rospy
 
 from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryGoal
 from trajectory_msgs.msg import JointTrajectoryPoint, JointTrajectory
-# TODO: ACTION_NAME = ???
+
 JOINT_NAME = 'torso_lift_joint'
 TIME_FROM_START = 5  # How many seconds it should take to set the torso height.
 
@@ -19,9 +19,9 @@ class Torso(object):
     MAX_HEIGHT = 0.4
 
     def __init__(self):
-        # TODO: Create actionlib client
-        # TODO: Wait for server
+        # Create actionlib client
         self.client = actionlib.SimpleActionClient('torso_controller/follow_joint_trajectory', FollowJointTrajectoryAction)
+        # Wait for server
         self.client.wait_for_server()
 
     def set_height(self, height):
@@ -33,32 +33,33 @@ class Torso(object):
             height: The height, in meters, to set the torso to. Values range
                 from Torso.MIN_HEIGHT (0.0) to Torso.MAX_HEIGHT(0.4).
         """
-        # TODO: Check that the height is between MIN_HEIGHT and MAX_HEIGHT.
+        # Check that the height is between MIN_HEIGHT and MAX_HEIGHT.
         if height < self.MIN_HEIGHT or height > self.MAX_HEIGHT:
             return
   
 
-        # TODO: Create a trajectory point
+        # Create a trajectory point (contained in JointTrajectory msg)
         destination = JointTrajectoryPoint()
-        # TODO: Set position of trajectory point
+        # Set position of trajectory point
         destination.positions.append(height)
-        # TODO: Set time of trajectory point
+        # Set time of trajectory point
         destination.time_from_start = rospy.Duration(5)
         
-        # Create a joint trajectory
+        # Create a joint trajectory (contained in JointTrajectoryGoal)
         trajectory = JointTrajectory()
-        # TODO: Add joint name to list
+        # Add joint name to list
         trajectory.joint_names.append(JOINT_NAME)
-         # TODO: Add the trajectory point created above to trajectory
+         # Add the trajectory point created above to trajectory
         trajectory.points.append(destination)
 
-        # TODO: Create goal
+        # Create goal
         goal = control_msgs.msg.FollowJointTrajectoryGoal()
         goal.trajectory = trajectory
-        # TODO: Send goal
+        # Send goal
         self.client.send_goal(goal)
-        # TODO: Wait for result
+        # Wait for result
         self.client.wait_for_result()
+        
         return self.client.get_result()
         
        
