@@ -1,0 +1,7 @@
+{
+  "name": "web-teleop",
+  "short_name": "web-teleop",
+  "description": "front end",
+  "start_url": "/",
+  "display": "standalone"
+}

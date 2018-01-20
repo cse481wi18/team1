@@ -18,15 +18,21 @@ def main():
     wait_for_time()
     torso_pub = rospy.Publisher('joint_state_republisher/torso_lift_joint',
                                 Float64, queue_size = QUEUE_SIZE)
+    head_pub = rospy.Publisher('joint_state_republisher/head_tilt_joint',
+                                Float64, queue_size = QUEUE_SIZE)                            
     reader = JointStateReader()
     rospy.sleep(0.5)
 
     rate = rospy.Rate(10)
     while not rospy.is_shutdown():
         # get torso joint value
-        val = reader.get_joint("torso_lift_joint")
+        torso_val = reader.get_joint("torso_lift_joint")
         # publish torso joint value
-        torso_pub.publish(val)
+        torso_pub.publish(torso_val)
+
+        head_val = reader.get_joint("head_tilt_joint")
+        # publish torso joint value
+        head_pub.publish(head_val)
         rate.sleep()
 
 

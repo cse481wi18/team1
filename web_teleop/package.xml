@@ -56,6 +56,7 @@
   <build_depend>message_generation</build_depend>
   <build_export_depend>fetch_api</build_export_depend>
   <build_export_depend>joint_state_reader</build_export_depend>
+  <build_export_depend>message_runtime</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>rospy</build_export_depend>
   <exec_depend>fetch_api</exec_depend>

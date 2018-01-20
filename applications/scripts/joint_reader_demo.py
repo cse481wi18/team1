@@ -20,7 +20,7 @@ def main():
     reader = JointStateReader()
     rospy.sleep(0.5)
     names = fetch_api.ArmJoints.names()
-    arm_vals = reader.get_joints(names)
+    arvals = reader.get_joints(names)
     for k, v in zip(names, arm_vals):
         print '{}\t{}'.format(k, v)                
                       
