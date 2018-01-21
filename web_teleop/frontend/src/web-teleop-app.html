@@ -30,7 +30,7 @@
       }
 
       #camera img {
-        width: 100%;
+        width: 50%;
         height: auto;
       } 
     </style>
@@ -66,6 +66,14 @@
     on-message="_handleAdjustGripper">
   </ros-topic>
 
+  <ros-topic auto
+  ros="{{ros}}"
+  topic="joint_state_republisher/arm_joints"
+  msg-type="std_msgs/Float64"
+  last-message="{{adjustArm}}"
+  on-message="_handleAdjustArm">
+</ros-topic>
+
   <ros-topic
     id="baseTopic"
     ros="{{ros}}"
@@ -99,6 +107,15 @@
     ros="{{ros}}"
     service-type="web_teleop/TiltHead">
   </ros-service>
+
+  <ros-service                                                                 
+  id="armService"
+  on-response="_handleArmSuccess"
+  on-fail="_handleArmError"
+  name="/web_teleop/adjust_arm"
+  ros="{{ros}}"
+  service-type="web_teleop/AdjustArm">
+</ros-service>
   
   <h1> Fetch teleop</h1>
   [[status]]
@@ -232,6 +249,23 @@
         this.status = 'Error: ' + evt.detail;
       }
 
+      _foldArm() {
+        this.status = 'Folding arm';
+        this.$.armService.call({position: [1.32, 1.4, -0.2, 1.7, 0, 1.6, 0]});
+      }
+
+      _extendArm() {
+        this.status = 'Extending arm';
+        this.$.armService.call({position: [0, 0, 0.0, 0, 0.0, 0, 0.0]});
+      }
+
+      _handleArmSuccess() {
+        this.status = 'Adjusted arm';
+      }
+      _handleArmError(evt) {
+        this.status = 'Error: ' + evt.detail;
+      }
+
       // Rounds val to a given precision, where the precision is given as the    
       // step size between numbers in the output range.                          
       // E.g., _round(0.053, 0.1) = 0.1                                          
@@ -307,7 +341,7 @@
             angular: {
               x: 0,
               y: 0,
-              z: .8 // Set rads/s to turn
+              z: .2 // Set rads/s to turn
             }
           });
         }, 10); // Run this function every 10ms, or approximately 100 times per second.
@@ -331,7 +365,7 @@
             angular: {
               x: 0,
               y: 0,
-              z: -.8 // Set rads/s to turn
+              z: -.2 // Set rads/s to turn
             }
           });
         }, 10); // Run this function every 10ms, or approximately 100 times per second.

@@ -2,6 +2,7 @@
 
 import fetch_api
 import rospy
+import time
 
 
 def wait_for_time():
@@ -27,6 +28,7 @@ def main():
     arm = fetch_api.Arm()
     for vals in DISCO_POSES:
         arm.move_to_joints(fetch_api.ArmJoints.from_list(vals))
+        time.sleep(1)
 
 
 if __name__ == '__main__':
