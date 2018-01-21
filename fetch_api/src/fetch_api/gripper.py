@@ -54,3 +54,14 @@ class Gripper(object):
         self.client.send_goal(goal)
         self.client.wait_for_result()
         return self.client.get_result()
+
+    def move(self, action):
+        print "IN move gripper"
+        if action == CLOSED_POS:
+            print "close gripper"
+            return self.close()
+        elif action == OPENED_POS:
+            print "open gripper"
+            return self.open()
+        print "none:("
+        return

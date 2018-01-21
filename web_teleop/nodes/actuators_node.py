@@ -2,7 +2,7 @@
 
 import fetch_api
 import rospy
-from web_teleop.srv import SetTorso, SetTorsoResponse, TiltHead, TiltHeadResponse
+from web_teleop.srv import SetTorso, SetTorsoResponse, TiltHead, TiltHeadResponse,AdjustGripper, AdjustGripperResponse
 
 
 def wait_for_time():
@@ -16,6 +16,7 @@ class ActuatorServer(object):
     def __init__(self):
         self._torso = fetch_api.Torso()
         self._head = fetch_api.Head()
+        self._gripper = fetch_api.Gripper()
 
     def handle_set_torso(self, request):
         # move the torso to the requested height
@@ -25,6 +26,10 @@ class ActuatorServer(object):
     def handle_tilt_head(self, request):
         self._head.pan_tilt(0, request.position)
         return TiltHeadResponse()
+    
+    def handle_adjust_gripper(self, request):
+        self._gripper.move(request.action)
+        return AdjustGripperResponse()
 
 
 def main():
@@ -34,6 +39,7 @@ def main():
     torso_service = rospy.Service('web_teleop/set_torso', SetTorso,
                                   server.handle_set_torso)
     head_service = rospy.Service('web_teleop/tilt_head', TiltHead, server.handle_tilt_head)
+    gripper_service = rospy.Service('web_teleop/adjust_gripper', AdjustGripper, server.handle_adjust_gripper)
     rospy.spin()
 
 
