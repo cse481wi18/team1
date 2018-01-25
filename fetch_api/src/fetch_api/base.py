@@ -86,7 +86,7 @@ class Base(object):
             self.move(direction * speed, 0)
             rate.sleep()
     
-s
+
     def turn(self, angular_distance, speed=0.5):
         """Rotates the robot a certain angle.
 
@@ -105,34 +105,29 @@ s
         modified_distance = angular_distance % (2*math.pi) 
 
         # get back negative rotation if needed
-        modified_distance = modified_distance * math.signum(angular_distance)
+        mult = math.copysign(1, angular_distance)
 
         rate = rospy.Rate(10)
 
         # TODO: CONDITION should check if the robot has rotated the desired amount
         # TODO: Be sure to handle the case where the desired amount is negative!
 
+	
+        start_quaternion = start.pose.pose.orientation 
 
-        start_quaternion = start.pose.pose.orientation.quaternion 
-
-        start_angle = angular_position_in_rads(start_quaternion)
+        start_angle = self.angular_position_in_rads(start_quaternion)
 
         # compute desired yaw, aka "goal angle", given angular_distance 
 
 
 
-        current_angle = angular_position_in_rads(self._last_odom.pose.pose.orientation.quaternion)
-
-        remaining_angular_distance = 0
-
-        # if angular_distance - current_angle > 180:
-        #     # stuff
-        # else: 
-        #     # more stuff
 
 
-        while CONDITION:
-            # TODO: you will probably need to do some math in this loop to check the CONDITION
+	current_angle = self.angular_position_in_rads(self._last_odom.pose.pose.orientation)
+        while mult * (modified_distance- current_angle + start_angle) > 0:
+            current_angle = self.angular_position_in_rads(self._last_odom.pose.pose.orientation)
+            
+	    # TODO: you will probably need to do some math in this loop to check the CONDITION
             direction = -1 if angular_distance < 0 else 1
             self.move(0, direction * speed)
             rate.sleep()
