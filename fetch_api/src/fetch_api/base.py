@@ -98,39 +98,51 @@ class Base(object):
         # rospy.sleep until the base has received at least one message on /odom
         while self._last_odom == None:
             rospy.sleep(self.SLEEP_FOR_ODOM)
+
         # record start position, use Python's copy.deepcopy
         start = copy.deepcopy(self._last_odom)
 
         # What will you do if angular_distance is greater than 2*pi or less than -2*pi?
-        modified_distance = angular_distance % (2*math.pi) 
+        goal = angular_distance % (2*math.pi) 
 
         # get back negative rotation if needed
         mult = math.copysign(1, angular_distance)
 
         rate = rospy.Rate(10)
-
-        # TODO: CONDITION should check if the robot has rotated the desired amount
-        # TODO: Be sure to handle the case where the desired amount is negative!
-
 	
         start_quaternion = start.pose.pose.orientation 
 
         start_angle = self.angular_position_in_rads(start_quaternion)
+        
+        # goal = (angular_distance + start_angle) % (2*math.pi) 
 
-        # compute desired yaw, aka "goal angle", given angular_distance 
+    
+        '''
+        case = -1; 
 
-
-
-
-
-	current_angle = self.angular_position_in_rads(self._last_odom.pose.pose.orientation)
-        while mult * (modified_distance- current_angle + start_angle) > 0:
-            current_angle = self.angular_position_in_rads(self._last_odom.pose.pose.orientation)
+        if (start_angle + angular_distance) >= 360:
+            #case 2
+           
+        elif (start_angle + angular_distance) < 0:
+            #case 4
             
-	    # TODO: you will probably need to do some math in this loop to check the CONDITION
+        elif angular_distance > 0:
+            #case 1
+            traveled_distance = start_angle - current_angle
+        else:
+            #case 3
+        '''
+
+        current_angle = self.angular_position_in_rads(self._last_odom.pose.pose.orientation)
+        distance_traveled = ((current_angle - start_angle) * mult + 360) % 360
+
+        while distance_traveled < abs(angular_distance):
             direction = -1 if angular_distance < 0 else 1
             self.move(0, direction * speed)
             rate.sleep()
+            current_angle = self.angular_position_in_rads(self._last_odom.pose.pose.orientation)
+            distance_traveled = ((current_angle - start_angle) * mult + 360) % 360
+    
 
     # don't worry about z axis because robot travels on flat ground presumably
     def distance_between_points(self, x1, y1, x2, y2):
