@@ -4,7 +4,7 @@
 import fetch_api
 import rospy
 from map_annotator import MapAnnotator
-from map_annotator.msg import PoseNames
+from map_annotator.msg import PoseNames, UserAction
 import atexit
 
 """
@@ -25,9 +25,10 @@ class MapAnnotatorServer(object):
 
 
     def __init__(self):
-        self._pose_pub = rospy.Publisher('pose_names', PoseNames, queue_size = QUEUE_SIZE, latch = True)
+        self._pose_pub = rospy.Publisher('/map_annotator/pose_names', PoseNames, queue_size = QUEUE_SIZE, latch = True)
         self._map_annotator = MapAnnotator()
         self._map_annotator.pickle_load()
+
 
     # request is of type UserAction message
     def handle_request(self, request):
@@ -57,19 +58,11 @@ class MapAnnotatorServer(object):
 def main():
     rospy.init_node('map_annotator_server')
     wait_for_time()
+    
     server = MapAnnotatorServer()
 
-   
-
-    rate = rospy.Rate(10)
-    while not rospy.is_shutdown():
-        if map_annotator.pose_list_changed():
-            msg = PoseNames()
-            msg.poses = map_annotator.list_poses()
-            pose_pub.publish(msg)
-        rate.sleep()
-    
-    # CALL SERVER EXIT SOMEWHERE
+    rospy.Subscriber("/map_annotator/user_actions", UserAction, server.handle_request)
+    rospy.spin()
 
 
 if __name__ == "__main__":
