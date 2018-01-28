@@ -7,12 +7,6 @@ from map_annotator import MapAnnotator
 from map_annotator.msg import PoseNames, UserAction
 import atexit
 
-"""
-Acts as a reactive database by publishing list of pose names whenever pose is 
-added, deleted, or renamed. Will publish to latched topic. 
-Message type = PoseNames, which is a list of strings
-"""
-
 QUEUE_SIZE = 10
 
 def wait_for_time():   
@@ -31,6 +25,7 @@ class MapAnnotatorServer(object):
 
 
     # request is of type UserAction message
+    # callback for handling messages from /map_annotator/user_actions topic
     def handle_request(self, request):
         if request.command == request.CREATE:
             self._map_annotator.save(request.name)
@@ -45,11 +40,13 @@ class MapAnnotatorServer(object):
         else:
             return -1
     
+    # when pose list changes, republish to the /map_annotator/pose_names latched topic
     def _republish_poses(self):
         msg = PoseNames()
         msg.poses = self._map_annotator.list_poses()
         self._pose_pub.publish(msg)
 
+    # persist pose list
     def server_exit(self):
         self._map_annotator.pickle_dump()
     
@@ -58,9 +55,10 @@ class MapAnnotatorServer(object):
 def main():
     rospy.init_node('map_annotator_server')
     wait_for_time()
-    
+
     server = MapAnnotatorServer()
 
+    # server subscribes to user_actions topic and executes requests as they come in
     rospy.Subscriber("/map_annotator/user_actions", UserAction, server.handle_request)
     rospy.spin()
 

@@ -29,6 +29,9 @@ tes and provides the latest joint angles.
         # publish poses to move_base_simple/goal which will move the base (node nav_rviz does this)
         self._pub = rospy.Publisher('move_base_simple/goal', PoseStamped, queue_size = 10)
 
+        # boolean flag to note if the pose list bas been added/deleted/renamed since last checked
+        self._pose_list_flag = False
+
     def save(self, name):
         # wait for first pose message to come in
         while self._last_pose == None: 
@@ -36,6 +39,8 @@ tes and provides the latest joint angles.
 
         # map name to current pose, overwriting name if necessary
         self._saved_poses[name] = self._last_pose 
+
+        self._pose_list_flag = True
 
     # returns -1 if name is not a saved pose
     def goto(self, name):
@@ -49,7 +54,7 @@ tes and provides the latest joint angles.
         return 0
 
     # returns list in Python 2, or view object in Python 3
-    def list_poses(self):
+    def list_poses(self): 
         return self._saved_poses.keys()
 
     # returns -1 if name is not a pose
@@ -58,22 +63,35 @@ tes and provides the latest joint angles.
             return -1
 
         self._saved_poses.pop(name, None)
+        self._pose_list_flag = True
         return 0
+    
+    def rename(self, oldname, newname):
+        if oldname not in self._saved_poses:
+            return -1
+        else:
+            self._saved_poses[newname] = self._saved_poses[oldname]
+            self.delete(oldname)
+            return 0 
 
     def pickle_dump(self):
-        print "dumping"
-        pickle_out = open("poses.p", 'wb')
-        pickle.dumps(self._saved_poses, pickle_out)
-        pickle_out.close()
-        print "closing"
+        pickle.dump(self._saved_poses, open("poses.p", 'wb'))
 
 
     def pickle_load(self):
-        open("poses.p", 'w+')
         try:
-            self._saved_poses = pickle.loads(open("poses.p", 'rb'))
-        except EOFError:
+            self._saved_poses = pickle.load(open("poses.p", 'rb'))
+        except Exception as e:
             self._saved_poses = {}
+    
+    # returns True if pose list has changed since this method called last
+    def pose_list_changed(self):
+        if self._pose_list_flag:
+            self._pose_list_flag = False
+            return True
+        else:
+            return False 
+
         
         
 
