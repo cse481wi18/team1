@@ -50,7 +50,6 @@
 
   <ros-topic auto
     ros="{{ros}}"
-    topic=map-annotator/
     id="userActions"
     topic="map_annotator/user_actions"
     ros="{{ros}}"
@@ -65,11 +64,11 @@
       <div id="content" class="layout horizontal">
         <div id="controls">
           <h2>Poses</h2>
-          <template is="dom-repeat" items="[[poseNames.names]]">
+          <template is="dom-repeat" items="[[poseNames.poses]]">
             <map-annotator-pose ros="[[ros]]" pose-name="[[item]]"></map-annotator-pose>
           </template>
         </div>
-        <ros-rviz id="rviz" class="flex"></ros-rviz>
+        <ros-rviz id="rviz" ros="[[ros]]" class="flex"></ros-rviz>
       </div>
     </div>
 
@@ -110,12 +109,18 @@
       }
       _handleSave(evt) {
        var name = prompt("Please enter a pose name"); 
-        console.log('Saving', name);
-        var msg = {
-          command: 'create',
-          name: name
-        };     
-        this.$.userActions.publish(msg);
+       console.log(name);
+       console.log(typeof(name));
+       if (name == null) {
+         console.log('Canceling');
+       } else {
+          console.log('Saving', name);
+          var msg = {
+            command: 'create',
+            name: name
+          };     
+          this.$.userActions.publish(msg);
+       }
       }
       ready() {
   super.ready();

@@ -9,12 +9,7 @@
         display: block;
       }
     </style>
-    [[poseName]]
-    <div>
-        <paper-button on-tap="_handleDelete">Delete</paper-button>
-        <paper-button on-tap="_handleGoTo">GoTo</paper-button>
 
-    </div>
 
     <ros-topic
         auto
@@ -23,6 +18,15 @@
         ros="{{ros}}"
         msg-type="map_annotator/UserAction"
     ></ros-topic>
+
+    [[poseName]]
+    <div>
+        <paper-button on-tap="_handleDelete">Delete</paper-button>
+        <paper-button on-tap="_handleGoTo">GoTo</paper-button>
+
+    </div>
+
+
 
     
   </template>
