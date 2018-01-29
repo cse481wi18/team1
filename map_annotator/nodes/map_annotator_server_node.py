@@ -79,9 +79,9 @@ class MapAnnotatorServer(object):
         # creates an arrow marker 
         arrow_marker = Marker()
         arrow_marker.type = Marker.ARROW
-        arrow_marker.scale.x = 0.5
-        arrow_marker.scale.y = 0.1
-        arrow_marker.scale.z = 0.1
+        arrow_marker.scale.x = 0.6
+        arrow_marker.scale.y = 0.2
+        arrow_marker.scale.z = 0.2
         arrow_marker.color.r = 0.0
         arrow_marker.color.g = 0.5
         arrow_marker.color.b = 0.5
@@ -91,13 +91,16 @@ class MapAnnotatorServer(object):
         text_marker = Marker()
         text_marker.type = Marker.TEXT_VIEW_FACING
         text_marker.text = name
-        text_marker.pose.position.z = text_marker.pose.position.z + 0.4
+        text_marker.pose.position.z = int_marker.pose.position.z + 0.4
         text_marker.scale=Vector3(0.3, 0.3, 0.3)
         text_marker.color = ColorRGBA(0.0, 0.0, 0.0, 0.8)
 
         text_control = InteractiveMarkerControl()
-        text_control.always_visible = True
+        text_control.name = "label"
         text_control.markers.append(text_marker)
+        text_control.interaction_mode = InteractiveMarkerControl.NONE
+        text_control.always_visible = True
+        
 
         int_marker.controls.append(copy.deepcopy(text_control))
 
