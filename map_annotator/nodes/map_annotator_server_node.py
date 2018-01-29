@@ -27,6 +27,7 @@ class MapAnnotatorServer(object):
     # request is of type UserAction message
     # callback for handling messages from /map_annotator/user_actions topic
     def handle_request(self, request):
+        print "handling request"
         if request.command == request.CREATE:
             self._map_annotator.save(request.name)
             self._republish_poses()
@@ -50,17 +51,18 @@ class MapAnnotatorServer(object):
     def server_exit(self):
         self._map_annotator.pickle_dump()
     
-    atexit.register(self.server_exit)
+    
 
 def main():
+    
     rospy.init_node('map_annotator_server')
     wait_for_time()
-
     server = MapAnnotatorServer()
-
+    atexit.register(server.server_exit)
     # server subscribes to user_actions topic and executes requests as they come in
     rospy.Subscriber("/map_annotator/user_actions", UserAction, server.handle_request)
     rospy.spin()
+
 
 
 if __name__ == "__main__":

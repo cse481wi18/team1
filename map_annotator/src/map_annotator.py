@@ -34,6 +34,7 @@ tes and provides the latest joint angles.
 
     def save(self, name):
         # wait for first pose message to come in
+        print "Saving"
         while self._last_pose == None: 
             rospy.sleep(.5)
 
