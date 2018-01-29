@@ -81,8 +81,17 @@ tes and provides the latest joint angles.
         else:
             return self._saved_poses[name]
 
+    def change_pose(self, name, pose):
+        if name not in self._saved_poses:
+            return -1
+        self._saved_poses[name] = pose
+        return 0
+
     def pickle_dump(self):
         pickle.dump(self._saved_poses, open("poses.p", 'wb'))
+
+    def get_all_poses(self):
+        return self._saved_poses
 
 
     def pickle_load(self):

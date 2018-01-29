@@ -9,7 +9,9 @@ from interactive_markers.interactive_marker_server import InteractiveMarkerServe
 from visualization_msgs.msg import InteractiveMarker, InteractiveMarkerControl, InteractiveMarkerFeedback
 from visualization_msgs.msg import Marker
 import copy
-
+import itertools
+from geometry_msgs.msg import Quaternion, Pose, Point, Vector3
+from std_msgs.msg import Header, ColorRGBA
 import atexit
 
 QUEUE_SIZE = 10
@@ -29,7 +31,9 @@ class MapAnnotatorServer(object):
 
         # interactive marker server
         self._interactiveServer = InteractiveMarkerServer("map_annotator/map_poses")
-
+       
+        for name, pose in self._map_annotator.get_all_poses().iteritems():
+            self._createMarker(pose, name)
 
     # request is of type UserAction message
     # callback for handling messages from /map_annotator/user_actions topic
@@ -40,10 +44,12 @@ class MapAnnotatorServer(object):
             self._map_annotator.save(request.name)
             self._republish_poses()
             pose = self._map_annotator.get_pose_from_name(request.name)
-            self.createMarker(pose)
+            self._createMarker(pose, request.name)
         elif request.command == request.DELETE:
-            self._map_annotator.delete(request.name)
+            val = self._map_annotator.delete(request.name)
             self._republish_poses()
+            if val == 0: 
+                self._deleteMarker(request.name)
         elif request.command == request.GOTO:
             self._map_annotator.goto(request.name)
         elif request.command == request.RENAME:
@@ -61,27 +67,40 @@ class MapAnnotatorServer(object):
     def server_exit(self):
         self._map_annotator.pickle_dump()
 
-    def createMarker(self, pose):
+    def _createMarker(self, pose, name):
             # creates and inits an interactiveMarker
         int_marker = InteractiveMarker()
         int_marker.header.frame_id = "map"
-        int_marker.name = "my_marker"
-        int_marker.description = "Simple Click Control"
+        int_marker.name = name
         int_marker.pose = pose
         int_marker.pose.position.z = 0.2
+        int_marker.description = name
 
         # creates an arrow marker 
         arrow_marker = Marker()
         arrow_marker.type = Marker.ARROW
-        # arrow_marker.pose = pose
-        # arrow_marker.pose.position.z = 0.2
-        arrow_marker.scale.x = 0.4
-        arrow_marker.scale.y = 0.4
+        arrow_marker.scale.x = 0.5
+        arrow_marker.scale.y = 0.1
         arrow_marker.scale.z = 0.1
         arrow_marker.color.r = 0.0
         arrow_marker.color.g = 0.5
         arrow_marker.color.b = 0.5
         arrow_marker.color.a = 1.0
+
+        # text
+        text_marker = Marker()
+        text_marker.type = Marker.TEXT_VIEW_FACING
+        text_marker.text = name
+        text_marker.pose.position.z = text_marker.pose.position.z + 0.4
+        text_marker.scale=Vector3(0.3, 0.3, 0.3)
+        text_marker.color = ColorRGBA(0.0, 0.0, 0.0, 0.8)
+
+        text_control = InteractiveMarkerControl()
+        text_control.always_visible = True
+        text_control.markers.append(text_marker)
+
+        int_marker.controls.append(copy.deepcopy(text_control))
+
 
         # rotation control
         rotation_control = InteractiveMarkerControl()
@@ -109,15 +128,25 @@ class MapAnnotatorServer(object):
         move_control.markers.append(copy.deepcopy(arrow_marker))
         int_marker.controls.append(copy.deepcopy(move_control))
 
-        self._interactiveServer.insert(int_marker, handle_viz_input)
+        self._interactiveServer.insert(int_marker, self._processFeedback)
+        self._interactiveServer.setCallback(int_marker.name, self._markerCallback, InteractiveMarkerFeedback.POSE_UPDATE)
         self._interactiveServer.applyChanges()
     
-def handle_viz_input(input):
-    print "call back"
-    if (input.event_type == InteractiveMarkerFeedback.BUTTON_CLICK):
-        rospy.loginfo(input.marker_name + ' was clicked.')
-    else:
-        rospy.loginfo('Cannot handle this InteractiveMarker event')
+    def _deleteMarker(self, name):
+        self._interactiveServer.erase(name)
+        self._interactiveServer.applyChanges()
+
+    def _markerCallback(self, feedback):
+        print "call back"
+        pose = feedback.pose
+        val = self._map_annotator.change_pose(feedback.marker_name, pose)
+        if val == 0:
+            self._republish_poses()
+
+    def _processFeedback(self, feedback):
+        if feedback.event_type == InteractiveMarkerFeedback.POSE_UPDATE:
+            rospy.loginfo("Pose changed")
+        self._interactiveServer.applyChanges()
 
 def main():
     rospy.init_node('map_annotator_server')
