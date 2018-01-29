@@ -8,6 +8,7 @@ from map_annotator.msg import PoseNames, UserAction
 from interactive_markers.interactive_marker_server import InteractiveMarkerServer
 from visualization_msgs.msg import InteractiveMarker, InteractiveMarkerControl, InteractiveMarkerFeedback
 from visualization_msgs.msg import Marker
+import copy
 
 import atexit
 
@@ -26,16 +27,21 @@ class MapAnnotatorServer(object):
         self._map_annotator.pickle_load()
         self._republish_poses()
 
+        # interactive marker server
+        self._interactiveServer = InteractiveMarkerServer("map_annotator/map_poses")
+
 
     # request is of type UserAction message
     # callback for handling messages from /map_annotator/user_actions topic
     def handle_request(self, request):
         print "handling request"
         print request.command
-        if request.command == "create":
+        if request.command == request.CREATE:
             self._map_annotator.save(request.name)
             self._republish_poses()
-        elif request.command == "delete":
+            pose = self._map_annotator.get_pose_from_name(request.name)
+            self.createMarker(pose)
+        elif request.command == request.DELETE:
             self._map_annotator.delete(request.name)
             self._republish_poses()
         elif request.command == request.GOTO:
@@ -55,6 +61,56 @@ class MapAnnotatorServer(object):
     def server_exit(self):
         self._map_annotator.pickle_dump()
 
+    def createMarker(self, pose):
+            # creates and inits an interactiveMarker
+        int_marker = InteractiveMarker()
+        int_marker.header.frame_id = "map"
+        int_marker.name = "my_marker"
+        int_marker.description = "Simple Click Control"
+        int_marker.pose = pose
+        int_marker.pose.position.z = 0.2
+
+        # creates an arrow marker 
+        arrow_marker = Marker()
+        arrow_marker.type = Marker.ARROW
+        # arrow_marker.pose = pose
+        # arrow_marker.pose.position.z = 0.2
+        arrow_marker.scale.x = 0.4
+        arrow_marker.scale.y = 0.4
+        arrow_marker.scale.z = 0.1
+        arrow_marker.color.r = 0.0
+        arrow_marker.color.g = 0.5
+        arrow_marker.color.b = 0.5
+        arrow_marker.color.a = 1.0
+
+        # rotation control
+        rotation_control = InteractiveMarkerControl()
+        rotation_control.orientation.w = 1
+        rotation_control.orientation.x = 0
+        rotation_control.orientation.y = 1
+        rotation_control.orientation.z = 0
+        rotation_control.name = "rotate"
+        rotation_control.interaction_mode = InteractiveMarkerControl.ROTATE_AXIS
+        rotation_control.always_visible = True
+
+        int_marker.controls.append(copy.deepcopy(rotation_control))
+
+        # move control
+        move_control = InteractiveMarkerControl()
+        move_control.orientation.w = 1
+        move_control.orientation.x = 0
+        move_control.orientation.y = 1
+        move_control.orientation.z = 0
+        move_control.name = "move"
+        move_control.interaction_mode = InteractiveMarkerControl.MOVE_PLANE
+        move_control.always_visible = True
+
+        # only append arrow to move control and not rotation control
+        move_control.markers.append(copy.deepcopy(arrow_marker))
+        int_marker.controls.append(copy.deepcopy(move_control))
+
+        self._interactiveServer.insert(int_marker, handle_viz_input)
+        self._interactiveServer.applyChanges()
     
 def handle_viz_input(input):
     print "call back"
@@ -62,44 +118,11 @@ def handle_viz_input(input):
         rospy.loginfo(input.marker_name + ' was clicked.')
     else:
         rospy.loginfo('Cannot handle this InteractiveMarker event')
-    
 
 def main():
-    
     rospy.init_node('map_annotator_server')
     wait_for_time()
     server = MapAnnotatorServer()
-    interactiveServer = InteractiveMarkerServer("interactive_marker_proxy_basic_controls")
-
-    # creates abd inits an interactiveMarker
-    int_marker = InteractiveMarker()
-    int_marker.header.frame_id = "base_link"
-    int_marker.name = "my_marker"
-    int_marker.description = "Simple Click Control"
-    int_marker.pose.position.x = 1
-    int_marker.pose.orientation.w = 1
-
-    # creates a teal cube Marker for the interactiveMarker
-    box_marker = Marker()
-    box_marker.type = Marker.CUBE
-    box_marker.pose.orientation.w = 1
-    box_marker.scale.x = 0.45
-    box_marker.scale.y = 0.45
-    box_marker.scale.z = 0.45
-    box_marker.color.r = 0.0
-    box_marker.color.g = 0.5
-    box_marker.color.b = 0.5
-    box_marker.color.a = 1.0
-
-    #creates an interactioveMarkerControl and adds the marker to it and adds the control to the InteractiveMarker
-    button_control = InteractiveMarkerControl()
-    button_control.interaction_mode = InteractiveMarkerControl.BUTTON
-    button_control.always_visible = True
-    button_control.markers.append(box_marker)
-    int_marker.controls.append(button_control)
-
-    interactiveServer.insert(int_marker, handle_viz_input)
-    interactiveServer.applyChanges()
 
     # server subscribes to user_actions topic and executes requests as they come in
     rospy.Subscriber("/map_annotator/user_actions", UserAction, server.handle_request)

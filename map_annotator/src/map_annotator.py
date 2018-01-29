@@ -75,6 +75,12 @@ tes and provides the latest joint angles.
             self.delete(oldname)
             return 0 
 
+    def get_pose_from_name(self, name):
+        if name not in self._saved_poses: 
+            return None
+        else:
+            return self._saved_poses[name]
+
     def pickle_dump(self):
         pickle.dump(self._saved_poses, open("poses.p", 'wb'))
 
