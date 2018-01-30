@@ -59,7 +59,7 @@ class Base(object):
     def _odom_callback(self, msg):
         self._last_odom = msg
 
-    def go_forward(self, distance, speed=0.1):
+    def go_forward(self, distance, speed=0.2):
         """Moves the robot a certain distance.
 
         It's recommended that the robot move slowly. If the robot moves too

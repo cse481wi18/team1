@@ -51,7 +51,7 @@ def wait_for_time():
         pass
 
 def main():
-    rospy.init_node('nav_node')
+    rospy.init_node('nav_sphere_node')
     wait_for_time()
     nav_path = NavPath()
     rospy.Subscriber('odom', Odometry, nav_path.callback)

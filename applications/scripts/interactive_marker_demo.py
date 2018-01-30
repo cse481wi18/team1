@@ -3,13 +3,18 @@
 from interactive_markers.interactive_marker_server import InteractiveMarkerServer
 from visualization_msgs.msg import InteractiveMarker, InteractiveMarkerControl, InteractiveMarkerFeedback
 from visualization_msgs.msg import Marker
+import fetch_api
 
 import rospy
+
+STEP = 4
 
 def handle_viz_input(input):
     print "call back"
     if (input.event_type == InteractiveMarkerFeedback.BUTTON_CLICK):
         rospy.loginfo(input.marker_name + ' was clicked.')
+        base = fetch_api.Base()
+        base.go_forward(STEP, .8)
     else:
         rospy.loginfo('Cannot handle this InteractiveMarker event')
 
