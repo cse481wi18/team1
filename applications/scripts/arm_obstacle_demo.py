@@ -4,6 +4,7 @@ import fetch_api
 import rospy
 from moveit_python import PlanningSceneInterface
 from geometry_msgs.msg import PoseStamped
+from moveit_msgs.msg import OrientationConstraint
 
 def wait_for_time():
     """Wait for simulated time to begin.
@@ -35,7 +36,7 @@ def main():
     x = table_x - (table_size_x / 2) + (size_x / 2)
     y = 0 
     z = table_z + (table_size_z / 2) + (size_z / 2)
-    planning_scene.addBox('divider', size_x, size_y, size_z, x, y, z)
+    # planning_scene.addBox('divider', size_x, size_y, size_z, x, y, z)
 
     pose1 = PoseStamped()
     pose1.header.frame_id = 'base_link'
@@ -62,12 +63,15 @@ def main():
         'allowed_planning_time': 15,
         'execution_timeout': 10,
         'num_planning_attempts': 5,
-        'replan': False
+        'replan': False,
+        'orientation_constraint': None,
+        'tolerance': 0.05
     }
 
 
     # Before moving to the first pose
     planning_scene.removeAttachedObject('tray')
+
 
     error = arm.move_to_pose(pose1, **kwargs)
 
@@ -86,6 +90,19 @@ def main():
                                 frame_attached_to, frames_okay_to_collide_with)
         planning_scene.setColor('tray', 1, 0, 1)
         planning_scene.sendColors()
+
+        # add orientation constraint
+        oc = OrientationConstraint()
+        oc.header.frame_id = 'base_link'
+        oc.link_name = 'wrist_roll_link'
+        oc.orientation.w = 1
+        oc.absolute_x_axis_tolerance = 0.1
+        oc.absolute_y_axis_tolerance = 0.1
+        oc.absolute_z_axis_tolerance = 3.14
+        oc.weight = 1.0
+
+        kwargs['orientation_constraint'] = oc
+        
 
         error = arm.move_to_pose(pose2, **kwargs)
 

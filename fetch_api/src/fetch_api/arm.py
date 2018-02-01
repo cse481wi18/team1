@@ -10,7 +10,7 @@ from .arm_joints import ArmJoints
 from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryGoal
 from trajectory_msgs.msg import JointTrajectoryPoint, JointTrajectory
 from .moveit_goal_builder import MoveItGoalBuilder
-from moveit_msgs.msg import MoveItErrorCodes, MoveGroupAction
+from moveit_msgs.msg import MoveItErrorCodes, MoveGroupAction, OrientationConstraint
 from moveit_msgs.srv import GetPositionIK, GetPositionIKRequest
 
 TRAJECTORY_TIME = 5
@@ -79,7 +79,8 @@ class Arm(object):
                  plan_only=False,
                  replan=False,
                  replan_attempts=5,
-                 tolerance=0.01):
+                 tolerance=0.01,
+                 orientation_constraint=None):
 
         """Moves the end-effector to a pose, using motion planning.
 
@@ -115,6 +116,11 @@ class Arm(object):
         goal_builder.replan = replan
         goal_builder.replan_attempts = replan_attempts
         goal_builder.tolerance = tolerance
+
+        if orientation_constraint is not None:
+            # print orientation_constraint
+            goal_builder.add_path_orientation_constraint(orientation_constraint)
+
         goal = goal_builder.build()
 
         self._move_group_client.send_goal(goal)
