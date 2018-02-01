@@ -11,6 +11,7 @@ from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryG
 from trajectory_msgs.msg import JointTrajectoryPoint, JointTrajectory
 from .moveit_goal_builder import MoveItGoalBuilder
 from moveit_msgs.msg import MoveItErrorCodes, MoveGroupAction
+from moveit_msgs.srv import GetPositionIK, GetPositionIKRequest
 
 TRAJECTORY_TIME = 5
 
@@ -32,6 +33,8 @@ class Arm(object):
 
         self._move_group_client = actionlib.SimpleActionClient('move_group', MoveGroupAction)
         self._move_group_client.wait_for_server()
+
+        self._compute_ik = rospy.ServiceProxy('compute_ik', GetPositionIK)
 
     def move_to_joints(self, arm_joints):
         """Moves the robot's arm to the given joints.
@@ -135,6 +138,34 @@ class Arm(object):
             group_name=group_name,
             tolerance=tolerance,
             plan_only=True)
+
+    def compute_ik(self, pose_stamped, timeout=rospy.Duration(5)):
+        """Computes inverse kinematics for the given pose.
+
+        Note: if you are interested in returning the IK solutions, we have
+            shown how to access them.
+
+        Args:
+            pose_stamped: geometry_msgs/PoseStamped.
+            timeout: rospy.Duration. How long to wait before giving up on the
+                IK solution.
+
+        Returns: True if the inverse kinematics were found, False otherwise.
+        """
+        request = GetPositionIKRequest()
+        request.ik_request.pose_stamped = pose_stamped
+        request.ik_request.group_name = 'arm'
+        request.ik_request.timeout = timeout
+        response = self._compute_ik(request)
+        error_str = self.moveit_error_string(response.error_code.val)
+        success = error_str == 'SUCCESS'
+        if not success:
+            return False
+        joint_state = response.solution.joint_state
+        for name, position in zip(joint_state.name, joint_state.position):
+            if name in ArmJoints.names():
+                rospy.loginfo('{}: {}'.format(name, position))
+        return True
 
 
     def cancel_all_goals(self):
