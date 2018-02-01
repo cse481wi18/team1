@@ -31,7 +31,7 @@ def main():
     planning_scene.removeCollisionObject('divider')
     size_x = 0.3 
     size_y = 0.01
-    size_z = 0.4 
+    size_z = 0.2 
     x = table_x - (table_size_x / 2) + (size_x / 2)
     y = 0 
     z = table_z + (table_size_z / 2) + (size_z / 2)
@@ -65,6 +65,10 @@ def main():
         'replan': False
     }
 
+
+    # Before moving to the first pose
+    planning_scene.removeAttachedObject('tray')
+
     error = arm.move_to_pose(pose1, **kwargs)
 
     if error is not None:
@@ -72,18 +76,28 @@ def main():
     else:
         rospy.loginfo('Pose 1 succeeded')
 
-    rospy.sleep(1)
+        rospy.sleep(1)
 
-    error = arm.move_to_pose(pose2, **kwargs)
+        frame_attached_to = 'gripper_link'
+        frames_okay_to_collide_with = [
+            'gripper_link', 'l_gripper_finger_link', 'r_gripper_finger_link'
+        ]
+        planning_scene.attachBox('tray', 0.3, 0.07, 0.01, 0.05, 0, 0,
+                                frame_attached_to, frames_okay_to_collide_with)
+        planning_scene.setColor('tray', 1, 0, 1)
+        planning_scene.sendColors()
 
-    if error is not None:
-        rospy.logerr('Pose 2 failed: {}'.format(error))
-    else:
-        rospy.loginfo('Pose 2 succeeded')
+        error = arm.move_to_pose(pose2, **kwargs)
+
+        if error is not None:
+            rospy.logerr('Pose 2 failed: {}'.format(error))
+        else:
+            rospy.loginfo('Pose 2 succeeded')
 
 
     planning_scene.removeCollisionObject('table')
     planning_scene.removeCollisionObject('divider')
+    planning_scene.removeAttachedObject('tray')
 
     
 
