@@ -6,7 +6,7 @@ from interactive_markers.interactive_marker_server import InteractiveMarkerServe
 from visualization_msgs.msg import InteractiveMarker, InteractiveMarkerControl, InteractiveMarkerFeedback
 from visualization_msgs.msg import Marker
 import copy
-from geometry_msgs.msg import Quaternion, Pose, Point, Vector3
+from geometry_msgs.msg import Quaternion, Pose, Point, Vector3, PoseStamped
 from std_msgs.msg import Header, ColorRGBA
 from joint_state_reader import JointStateReader
 import tf
@@ -35,6 +35,7 @@ class GripperTeleop(object):
         gripper_im.header.frame_id = "gripper_link"
         gripper_im.name = "Gripper"
         gripper_im.description = "Gripper"
+        gripper_im.scale = .5
 
         #gripper marker
         gripper_marker = Marker()
@@ -78,10 +79,11 @@ class GripperTeleop(object):
         r_finger_marker.header.frame_id = "r_gripper_finger_link"
 
         gripper_control.markers.append(copy.deepcopy(r_finger_marker))
-
         gripper_im.controls.append(copy.deepcopy(gripper_control))
-        gripper_im.controls.append(self._make_6dof_controls())
+        dof_controls = self._make_6dof_controls()
+        gripper_im.controls.extend(dof_controls)
       
+        
         self._im_server.insert(gripper_im, feedback_cb=self.handle_feedback)
     
         self._im_server.applyChanges()
@@ -89,10 +91,17 @@ class GripperTeleop(object):
 
     def handle_feedback(self, feedback):
         print "call back"
-        # if (input.event_type == InteractiveMarkerFeedback.):
-        #     rospy.loginfo(input.marker_name + ' was clicked.')
-        #     base = fetch_api.Base()
-        #     base.go_forward(STEP, .8)
+        if (feedback.event_type == InteractiveMarkerFeedback.POSE_UPDATE):
+            print feedback.pose
+            ps = PoseStamped()
+            ps.header.frame_id = 'base_link'
+            ps.pose = feedback.pose
+           #error = self._arm.check_pose(ps, allowed_planning_time=1.0)
+           # if error is None:
+            error = self._arm.move_to_pose(ps)
+            print error
+        #    else:
+         #       rospy.loginfo("Could not find path to move arm")
 
 
     # returns list of InteractiveMarkerControl
@@ -100,6 +109,9 @@ class GripperTeleop(object):
         controls_list = []
 
         control = InteractiveMarkerControl()
+        control.always_visible = True
+
+
         
         control.orientation.w = 1
         control.orientation.x = 1
@@ -136,6 +148,8 @@ class GripperTeleop(object):
         control.name = "move_y"
         control.interaction_mode = InteractiveMarkerControl.MOVE_AXIS
         controls_list.append(copy.deepcopy(control))
+
+        return controls_list
  
 
 
