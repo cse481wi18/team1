@@ -8,6 +8,8 @@ from visualization_msgs.msg import Marker
 import copy
 from geometry_msgs.msg import Quaternion, Pose, Point, Vector3
 from std_msgs.msg import Header, ColorRGBA
+from joint_state_reader import JointStateReader
+import tf
 
 
 QUEUE_SIZE = 10
@@ -26,14 +28,12 @@ class GripperTeleop(object):
 
     def start(self):
         print "Adding marker"
-        gripper_im = InteractiveMarker()
-        gripper_im.header.frame_id = "wrist_roll_link"
-        gripper_im.name = "Gripper"
 
-        # to do find this pose
-        gripper_im.pose.position.x = 0.166
-        gripper_im.pose.position.y = 0
-        gripper_im.pose.position.z = 0
+        listener = tf.TransformListener()
+
+        gripper_im = InteractiveMarker()
+        gripper_im.header.frame_id = "gripper_link"
+        gripper_im.name = "Gripper"
         gripper_im.description = "Gripper"
 
         #gripper marker
@@ -44,14 +44,17 @@ class GripperTeleop(object):
         gripper_marker.color.g = 0.0
         gripper_marker.color.b = 0.0
         gripper_marker.color.a = 1.0
+        gripper_marker.scale.y = 1.05
+        gripper_marker.scale.z = 1.05
+
+        gripper_marker.header.frame_id = "gripper_link"
 
         gripper_control = InteractiveMarkerControl()
         gripper_control.name = "gripper control"
-        gripper_control.markers.append(gripper_marker)
+        gripper_control.markers.append(copy.deepcopy(gripper_marker))
         gripper_control.always_visible = True
 
-        gripper_im.controls.append(copy.deepcopy(gripper_control))
-        
+
         # left finger marker 
         l_finger_marker = Marker()
         l_finger_marker.type = Marker.MESH_RESOURCE
@@ -60,16 +63,11 @@ class GripperTeleop(object):
         l_finger_marker.color.g = 1.0
         l_finger_marker.color.b = 0.0
         l_finger_marker.color.a = 1.0
+        l_finger_marker.header.frame_id = "l_gripper_finger_link"
 
+        gripper_control.markers.append(copy.deepcopy(l_finger_marker))
 
-        l_finger_control = InteractiveMarkerControl()
-        l_finger_control.name = "l_finger_marker control"
-        l_finger_control.markers.append(copy.deepcopy(l_finger_marker))
-        l_finger_control.always_visible = True
-
-        gripper_im.controls.append(copy.deepcopy(l_finger_control))
-       
-        #right finger marker
+         #right finger marker
         r_finger_marker = Marker()
         r_finger_marker.type = Marker.MESH_RESOURCE
         r_finger_marker.mesh_resource = 'package://fetch_description/meshes/r_gripper_finger_link.STL'
@@ -77,20 +75,69 @@ class GripperTeleop(object):
         r_finger_marker.color.g = 0.0
         r_finger_marker.color.b = 1.0
         r_finger_marker.color.a = 1.0
+        r_finger_marker.header.frame_id = "r_gripper_finger_link"
 
-        r_finger_control = InteractiveMarkerControl()
-        r_finger_control.name = "r_finger_marker control"
-        r_finger_control.markers.append(copy.deepcopy(r_finger_marker))
-        r_finger_control.always_visible = True
+        gripper_control.markers.append(copy.deepcopy(r_finger_marker))
 
-        gripper_im.controls.append(copy.deepcopy(r_finger_control))
-       
-
+        gripper_im.controls.append(copy.deepcopy(gripper_control))
+        gripper_im.controls.append(self._make_6dof_controls())
+      
         self._im_server.insert(gripper_im, feedback_cb=self.handle_feedback)
+    
         self._im_server.applyChanges()
 
+
     def handle_feedback(self, feedback):
-        print "Handleing feedback"
+        print "call back"
+        # if (input.event_type == InteractiveMarkerFeedback.):
+        #     rospy.loginfo(input.marker_name + ' was clicked.')
+        #     base = fetch_api.Base()
+        #     base.go_forward(STEP, .8)
+
+
+    # returns list of InteractiveMarkerControl
+    def _make_6dof_controls(self): 
+        controls_list = []
+
+        control = InteractiveMarkerControl()
+        
+        control.orientation.w = 1
+        control.orientation.x = 1
+        control.orientation.y = 0
+        control.orientation.z = 0
+        control.name = "rotate_x"
+        control.interaction_mode = InteractiveMarkerControl.ROTATE_AXIS
+        controls_list.append(copy.deepcopy(control))
+
+        control.name = "move_x"
+        control.interaction_mode = InteractiveMarkerControl.MOVE_AXIS
+        controls_list.append(copy.deepcopy(control))
+
+        control.orientation.w = 1
+        control.orientation.x = 0
+        control.orientation.y = 1
+        control.orientation.z = 0
+        control.name = "rotate_z"
+        control.interaction_mode = InteractiveMarkerControl.ROTATE_AXIS
+        controls_list.append(copy.deepcopy(control))
+
+        control.name = "move_z"
+        control.interaction_mode = InteractiveMarkerControl.MOVE_AXIS
+        controls_list.append(copy.deepcopy(control))
+
+        control.orientation.w = 1
+        control.orientation.x = 0
+        control.orientation.y = 0
+        control.orientation.z = 1
+        control.name = "rotate_y"
+        control.interaction_mode = InteractiveMarkerControl.ROTATE_AXIS
+        controls_list.append(copy.deepcopy(control))
+
+        control.name = "move_y"
+        control.interaction_mode = InteractiveMarkerControl.MOVE_AXIS
+        controls_list.append(copy.deepcopy(control))
+ 
+
 
 
 class AutoPickTeleop(object):
