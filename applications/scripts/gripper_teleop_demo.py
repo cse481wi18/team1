@@ -31,7 +31,7 @@ class GripperTeleop(object):
     def start(self):
 
         gripper_im = InteractiveMarker()
-        gripper_im.header.frame_id = "gripper_link"
+        gripper_im.header.frame_id = "base_link"
         gripper_im.name = "Gripper"
         gripper_im.description = "Gripper"
         gripper_im.scale = .5
@@ -71,7 +71,7 @@ class GripperTeleop(object):
         gripper_marker.scale.y = 1.05
         gripper_marker.scale.z = 1.05
 
-        gripper_marker.header.frame_id = "gripper_link"
+        gripper_marker.header.frame_id = "base_link"
 
 
         gripper_control = InteractiveMarkerControl()
@@ -87,7 +87,7 @@ class GripperTeleop(object):
         l_finger_marker.color.g = 1.0
         l_finger_marker.color.b = 0.0
         l_finger_marker.color.a = 1.0
-        l_finger_marker.header.frame_id = "l_gripper_finger_link"
+        l_finger_marker.header.frame_id = "base_link"
 
         gripper_control.markers.append(copy.deepcopy(l_finger_marker))
 
@@ -99,7 +99,7 @@ class GripperTeleop(object):
         r_finger_marker.color.g = 0.0
         r_finger_marker.color.b = 1.0
         r_finger_marker.color.a = 1.0
-        r_finger_marker.header.frame_id = "r_gripper_finger_link"
+        r_finger_marker.header.frame_id = "base_link"
 
         gripper_control.markers.append(copy.deepcopy(r_finger_marker))
         gripper_im.controls.append(copy.deepcopy(gripper_control))
@@ -137,9 +137,9 @@ class GripperTeleop(object):
 
                 error = self._arm.move_to_pose(ps)
                 if error is None:
-                    self._change_gripper_color(True)
+                    self._change_gripper_color(True, ps)
                 else:
-                    self._change_gripper_color(False)
+                    self._change_gripper_color(False, ps)
 
         elif feedback.event_type == InteractiveMarkerFeedback.POSE_UPDATE:
             print feedback.pose
@@ -150,8 +150,8 @@ class GripperTeleop(object):
 
             ps.header.frame_id = 'base_link'
             ps.pose = feedback.pose
-            error = self._arm.check_pose(ps, allowed_planning_time=10.0)
-            if error is None:
+            error = self._arm.compute_ik(ps)
+            if error is True:
                 self._change_gripper_color(True, ps)
             else:
                 rospy.loginfo("Could not find path to move arm")
@@ -170,9 +170,6 @@ class GripperTeleop(object):
                     marker.color.b = 0.0
                     marker.color.a = 1.0
                     marker.pose = pose.pose
-
-                control.markers.append(copy.deepcopy(marker))
-            gripper_im.controls.append(copy.deepcopy(control))
         else: 
             for control in gripper_im.controls:
                 for marker in control.markers:
