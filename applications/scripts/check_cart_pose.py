@@ -25,7 +25,7 @@ def main():
         print_usage()
         return
     command, x, y, z = argv[1], float(argv[2]), float(argv[3]), float(argv[4])
-   
+
     arm = fetch_api.Arm()
     ps = PoseStamped()
     ps.header.frame_id = 'base_link'
