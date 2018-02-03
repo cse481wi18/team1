@@ -35,7 +35,7 @@ class GripperTeleop(object):
         gripper_im.name = "Gripper"
         gripper_im.description = "Gripper"
         gripper_im.scale = .5
-        gripper_im.pose.position.x = -.166
+        gripper_im.pose.position.x = .166
         
         # menu entries
         menu1 = MenuEntry()
@@ -105,14 +105,12 @@ class GripperTeleop(object):
         gripper_im.controls.append(copy.deepcopy(gripper_control))
         dof_controls = self._make_6dof_controls()
         gripper_im.controls.extend(dof_controls)
-
-        #  while self.current_pose == None: 
-        #     rospy.sleep(.5)
-        # self.current_pose = self._arm.pose()
       
         self._im_server.insert(gripper_im, feedback_cb=self.handle_feedback)
         self._im_server.applyChanges()
 
+    # Todo: implement these??
+    
     # def make_open_gripper_marker(self, pose):
     
     # def make_gripper_marker(self, pose, finger_distance):
@@ -133,23 +131,59 @@ class GripperTeleop(object):
 
                 # TODO: The pose is given to us in gripper_link frame 
                 # but we need it to be in base_link frame so transformation??
-
-                # Also need to figure out what to do about the gripper_open and close callbacks Justin suggested..
-                
-
                 ps.header.frame_id = 'base_link'
 
                 ps.pose = feedback.pose
-                error = self._arm.check_pose(ps, allowed_planning_time=10.0)
+
+                error = self._arm.move_to_pose(ps)
                 if error is None:
-                    error = self._arm.move_to_pose(ps)
-                    print error
+                    self._change_gripper_color(True)
                 else:
-                    rospy.loginfo("Could not find path to move arm")
-                    print error
+                    self._change_gripper_color(False)
+
+        elif feedback.event_type == InteractiveMarkerFeedback.POSE_UPDATE:
+            print feedback.pose
+            ps = PoseStamped()
+
+            # TODO: The pose is given to us in gripper_link frame 
+            # but we need it to be in base_link frame so transformation??
+
+            ps.header.frame_id = 'base_link'
+            ps.pose = feedback.pose
+            error = self._arm.check_pose(ps, allowed_planning_time=10.0)
+            if error is None:
+                self._change_gripper_color(True, ps)
+            else:
+                rospy.loginfo("Could not find path to move arm")
+                self._change_gripper_color(False, ps)
         else:
             print "IDK"
 
+
+    def _change_gripper_color(self, success, pose):
+        gripper_im = self._im_server.get("Gripper")
+        if success:
+            for control in gripper_im.controls:
+                for marker in control.markers:
+                    marker.color.r = 0.0
+                    marker.color.g = 1.0
+                    marker.color.b = 0.0
+                    marker.color.a = 1.0
+                    marker.pose = pose.pose
+
+                control.markers.append(copy.deepcopy(marker))
+            gripper_im.controls.append(copy.deepcopy(control))
+        else: 
+            for control in gripper_im.controls:
+                for marker in control.markers:
+                    marker.color.r = 1.0
+                    marker.color.g = 0.0
+                    marker.color.b = 0.0
+                    marker.color.a = 1.0
+                    marker.pose = pose.pose
+        self._im_server.insert(gripper_im, feedback_cb=self.handle_feedback)
+        self._im_server.applyChanges()
+    
 
     # returns list of InteractiveMarkerControl
     def _make_6dof_controls(self): 
