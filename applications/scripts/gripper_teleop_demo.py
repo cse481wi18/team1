@@ -35,7 +35,7 @@ class GripperTeleop(object):
         gripper_im.name = "Gripper"
         gripper_im.description = "Gripper"
         gripper_im.scale = .5
-        gripper_im.pose.position.x = .166
+
         
         # menu entries
         menu1 = MenuEntry()
@@ -70,6 +70,8 @@ class GripperTeleop(object):
         gripper_marker.color.a = 1.0
         gripper_marker.scale.y = 1.05
         gripper_marker.scale.z = 1.05
+        gripper_marker.pose.position.x = .166
+       
 
         gripper_marker.header.frame_id = "base_link"
 
@@ -88,6 +90,7 @@ class GripperTeleop(object):
         l_finger_marker.color.b = 0.0
         l_finger_marker.color.a = 1.0
         l_finger_marker.header.frame_id = "base_link"
+        l_finger_marker.pose.position.x = .166
 
         gripper_control.markers.append(copy.deepcopy(l_finger_marker))
 
@@ -100,8 +103,14 @@ class GripperTeleop(object):
         r_finger_marker.color.b = 1.0
         r_finger_marker.color.a = 1.0
         r_finger_marker.header.frame_id = "base_link"
+        r_finger_marker.pose.position.x = .166
 
         gripper_control.markers.append(copy.deepcopy(r_finger_marker))
+        
+        #doesn't work to translate the  marker positions
+        """for marker in gripper_control.markers:
+            marker.pose.position.x += .166"""
+
         gripper_im.controls.append(copy.deepcopy(gripper_control))
         dof_controls = self._make_6dof_controls()
         gripper_im.controls.extend(dof_controls)
@@ -133,6 +142,7 @@ class GripperTeleop(object):
                 # but we need it to be in base_link frame so transformation??
                 ps.header.frame_id = 'base_link'
 
+                #adjusts to be directly on top of the (incorrectly placed) marker
                 ps.pose = feedback.pose
 
                 error = self._arm.move_to_pose(ps)
@@ -147,9 +157,11 @@ class GripperTeleop(object):
 
             # TODO: The pose is given to us in gripper_link frame 
             # but we need it to be in base_link frame so transformation??
-
+            
             ps.header.frame_id = 'base_link'
             ps.pose = feedback.pose
+            
+
             error = self._arm.compute_ik(ps)
             if error is True:
                 self._change_gripper_color(True, ps)
