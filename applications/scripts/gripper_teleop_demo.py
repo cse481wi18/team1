@@ -32,7 +32,6 @@ class GripperTeleop(object):
         self._listener = tf.TransformListener() # to compute transforms
 
     def start(self):
-
         gripper_im = InteractiveMarker()
         gripper_im.header.frame_id = "base_link"
         gripper_im.name = "Gripper"
@@ -74,9 +73,6 @@ class GripperTeleop(object):
         gripper_marker.scale.y = 1.05
         gripper_marker.scale.z = 1.05
         gripper_marker.pose.position.x = X_OFFSET
-       
-
-        gripper_marker.header.frame_id = "base_link"
 
 
         gripper_control = InteractiveMarkerControl()
@@ -93,7 +89,6 @@ class GripperTeleop(object):
         l_finger_marker.color.g = 0.0
         l_finger_marker.color.b = 0.0
         l_finger_marker.color.a = 1.0
-        l_finger_marker.header.frame_id = "base_link"
         l_finger_marker.pose.position.x = X_OFFSET
    
 
@@ -108,7 +103,6 @@ class GripperTeleop(object):
         r_finger_marker.color.g = 0.0
         r_finger_marker.color.b = 0.0
         r_finger_marker.color.a = 1.0
-        r_finger_marker.header.frame_id = "base_link"
         r_finger_marker.pose.position.x = X_OFFSET
 
         gripper_control.markers.append(copy.deepcopy(r_finger_marker))
@@ -151,7 +145,6 @@ class GripperTeleop(object):
 
                 #adjusts to be directly on top of the (incorrectly placed) marker
                 ps.pose = feedback.pose
-                ps.pose.position.x = feedback.pose.position.x
 
                 error = self._arm.move_to_pose(ps)
 
@@ -184,9 +177,7 @@ class GripperTeleop(object):
     # Marker has a Pose field
     def _change_gripper_color(self, success, pose):
         gripper_im = self._im_server.get("Gripper")
-        # print pose.pose
-        # print "--------"
-        # print gripper_im.pose
+
         if success:
             for control in gripper_im.controls:
                 for marker in control.markers:
@@ -194,11 +185,7 @@ class GripperTeleop(object):
                     marker.color.g = 1.0
                     marker.color.b = 0.0
                     marker.color.a = 1.0  
-                    if control.name == "gripper control":
-                        marker.pose.orientation = pose.pose.orientation
-                        marker.pose.position.y = pose.pose.position.y
-                        marker.pose.position.z = pose.pose.position.z
-                        marker.pose.position.x = pose.pose.position.x + X_OFFSET
+                 
         else: 
             for control in gripper_im.controls:
                 for marker in control.markers:
@@ -206,11 +193,6 @@ class GripperTeleop(object):
                     marker.color.g = 0.0
                     marker.color.b = 0.0
                     marker.color.a = 1.0
-                    if control.name == "gripper control":
-                        marker.pose.orientation = pose.pose.orientation
-                        marker.pose.position.y = pose.pose.position.y
-                        marker.pose.position.z = pose.pose.position.z
-                        marker.pose.position.x = pose.pose.position.x + X_OFFSET
 
         self._im_server.insert(gripper_im, feedback_cb=self.handle_feedback)
         self._im_server.applyChanges()
@@ -322,20 +304,240 @@ class GripperTeleop(object):
         # this is the position vector that the gripper should be in
         return (temp4[0], temp4[1], temp4[2])
 
+class AutoPickTeleop(object):
+    def __init__(self, arm, gripper, im_server):
+        self._arm = arm
+        self._gripper = gripper
+        self._im_server = im_server
+
+    def start(self):
+        gripper_im = InteractiveMarker()
+        gripper_im.header.frame_id = "base_link"
+        gripper_im.name = "Gripper"
+        gripper_im.description = "Gripper"
+        gripper_im.scale = .35
+        
+        # menu entries
+        menu1 = MenuEntry()
+        menu1.id = 1
+        menu1.parent_id = 0
+        menu1.title = "Pick up object"
+        menu1.command_type = 0
+        
+        gripper_im.menu_entries.append(menu1)
+
+        #gripper marker
+        gripper_marker = Marker()
+        gripper_marker.type = Marker.MESH_RESOURCE
+        gripper_marker.mesh_resource =  'package://fetch_description/meshes/gripper_link.dae'
+        gripper_marker.color.r = 1.0
+        gripper_marker.color.g = 0.0
+        gripper_marker.color.b = 0.0 
+        gripper_marker.color.a = 1.0
+        gripper_marker.scale.y = 1.05
+        gripper_marker.scale.z = 1.05
+        gripper_marker.pose.position.x = X_OFFSET
+    
 
 
-# class AutoPickTeleop(objpose.orientationect):
-#     def __init__(self, arm, gripper, im_server):
-#         self._arm = arm
-#         self._gripper = gripper
-#         self._im_server = im_server
+        gripper_control = InteractiveMarkerControl()
+        gripper_control.name = "gripper control"
+        gripper_control.markers.append(copy.deepcopy(gripper_marker))
+        gripper_control.always_visible = True
+    
 
-#     def start(self):
-#         # obj_im = InteractiveMarker() ...
-#         self._im_server.insert(obj_im, feedback_cb=self.handle_feedback)
+        # left finger marker 
+        l_finger_marker = Marker()
+        l_finger_marker.type = Marker.MESH_RESOURCE
+        l_finger_marker.mesh_resource = 'package://fetch_description/meshes/l_gripper_finger_link.STL'
+        l_finger_marker.color.r = 1.0
+        l_finger_marker.color.g = 0.0
+        l_finger_marker.color.b = 0.0
+        l_finger_marker.color.a = 1.0
+        l_finger_marker.pose.position.x = X_OFFSET
+   
 
-#     def handle_feedback(self, feedback):
-#         pass
+
+        gripper_control.markers.append(copy.deepcopy(l_finger_marker))
+
+         #right finger marker
+        r_finger_marker = Marker()
+        r_finger_marker.type = Marker.MESH_RESOURCE
+        r_finger_marker.mesh_resource = 'package://fetch_description/meshes/r_gripper_finger_link.STL'
+        r_finger_marker.color.r = 1.0
+        r_finger_marker.color.g = 0.0
+        r_finger_marker.color.b = 0.0
+        r_finger_marker.color.a = 1.0
+        r_finger_marker.pose.position.x = X_OFFSET
+
+        gripper_control.markers.append(copy.deepcopy(r_finger_marker))
+        
+        #doesn't work to translate the  marker positions
+        """for marker in gripper_control.markers:
+            marker.pose.position.x += .166"""
+
+        gripper_im.controls.append(copy.deepcopy(gripper_control))
+        dof_controls = self._make_6dof_controls()
+        gripper_im.controls.extend(copy.deepcopy(dof_controls))
+      
+        self._im_server.insert(gripper_im, feedback_cb=self.handle_feedback)
+        self._im_server.applyChanges()
+
+        # returns list of InteractiveMarkerControl
+    def _make_6dof_controls(self): 
+        controls_list = []
+
+        control = InteractiveMarkerControl()
+        control.always_visible = True
+
+        control.orientation.w = 1
+        control.orientation.x = 1
+        control.orientation.y = 0
+        control.orientation.z = 0
+
+        control.name = "rotate_x"
+        control.interaction_mode = InteractiveMarkerControl.ROTATE_AXIS
+        controls_list.append(copy.deepcopy(control))
+
+
+        control.name = "move_x"
+        control.interaction_mode = InteractiveMarkerControl.MOVE_AXIS
+        controls_list.append(copy.deepcopy(control))
+
+        control.orientation.w = 1
+        control.orientation.x = 0
+        control.orientation.y=  1
+        control.orientation.z = 0
+        control.name = "rotate_z"
+        control.interaction_mode = InteractiveMarkerControl.ROTATE_AXIS
+        controls_list.append(copy.deepcopy(control))
+
+        control.name = "move_z"
+        control.interaction_mode = InteractiveMarkerControl.MOVE_AXIS
+        controls_list.append(copy.deepcopy(control))
+
+        control.orientation.w = 1
+        control.orientation.x = 0
+        control.orientation.y = 0
+        control.orientation.z = 1
+        control.name = "rotate_y"
+        control.interaction_mode = InteractiveMarkerControl.ROTATE_AXIS
+        controls_list.append(copy.deepcopy(control))
+
+        control.name = "move_y"
+        control.interaction_mode = InteractiveMarkerControl.MOVE_AXIS
+        controls_list.append(copy.deepcopy(control))
+
+        return controls_list
+
+        # pose = PoseStamped
+    # Marker has a Pose field
+    def _change_gripper_color(self, success, pose):
+        gripper_im = self._im_server.get("Gripper")
+        # print pose.pose
+        # print "--------"
+        # print gripper_im.pose
+        if success:
+            for control in gripper_im.controls:
+                for marker in control.markers:
+                    marker.color.r = 0.0
+                    marker.color.g = 1.0
+                    marker.color.b = 0.0
+                    marker.color.a = 1.0  
+                    # if control.name == "gripper control":
+                    #     marker.pose.orientation = pose.pose.orientation
+                    #     marker.pose.position.y = pose.pose.position.y
+                    #     marker.pose.position.z = pose.pose.position.z
+                    #     marker.pose.position.x = pose.pose.position.x + X_OFFSET
+        else: 
+            for control in gripper_im.controls:
+                for marker in control.markers:
+                    marker.color.r = 1.0
+                    marker.color.g = 0.0
+                    marker.color.b = 0.0
+                    marker.color.a = 1.0
+                    # if control.name == "gripper control":
+                    #     marker.pose.orientation = pose.pose.orientation
+                    #     marker.pose.position.y = pose.pose.position.y
+                    #     marker.pose.position.z = pose.pose.position.z
+                    #     marker.pose.position.x = pose.pose.position.x + X_OFFSET
+
+        self._im_server.insert(gripper_im, feedback_cb=self.handle_feedback)
+        self._im_server.applyChanges()
+        
+
+    # pose is a PoseStamped
+    def _change_gripper_position(self, pose):
+        gripper_im = self._im_server.get("Gripper")
+        #gripper_im.pose = pose.pose
+        #temp_pose = copy.deepcopy(pose)
+        # transformed = self._transform_gripper_position(temp_pose.pose)
+        # temp_pose.pose.position = Point(transformed[0], transformed[1], transformed[2]) # applies the offset
+      
+        # for control in gripper_im.controls:
+        #     for marker in control.markers:
+        #         marker.pose = copy.deepcopy(pose.pose)
+        #         # if control.name == "gripper control":
+        #         #     marker.pose.position = temp_pose.pose.position
+
+        self._im_server.insert(gripper_im, feedback_cb=self.handle_feedback)
+        self._im_server.applyChanges()
+
+    def handle_feedback(self, feedback):
+        print "call back"
+        
+        if (feedback.event_type == InteractiveMarkerFeedback.MENU_SELECT):
+            if feedback.menu_entry_id == 1:
+                print feedback.pose
+                ps = PoseStamped()
+
+                # TODO: The pose is given to us in gripper_link frame 
+                # but we need it to be in base_link frame so transformation??
+                ps.header.frame_id = 'base_link'
+
+                #adjusts to be directly on top of the (incorrectly placed) marker
+                ps.pose = feedback.pose
+                ps.pose.position.x = feedback.pose.position.x
+
+                raised_ps = PoseStamped()
+                raised_ps.header.frame_id = 'base_link'
+
+                #adjusts to be directly on top of the (incorrectly placed) marker
+                raised_ps.pose = feedback.pose
+                raised_ps.pose.position.y = feedback.pose.position.y + 1
+                print "moving to pose"
+                error = self._arm.move_to_pose(ps)
+
+                if error is None:
+                    
+                    self._change_gripper_color(True, ps)
+                    print "closing gripper"
+                    self._gripper.close()
+                    print "raising arm"
+                    self._arm.move_to_pose(raised_ps)
+                else:
+                    print "could not move"
+                    self._change_gripper_color(False, ps)
+        elif feedback.event_type == InteractiveMarkerFeedback.POSE_UPDATE:
+            print feedback.pose
+            ps = PoseStamped()
+
+            # TODO: The pose is given to us in gripper_link frame 
+            # but we need it to be in base_link frame so transformation??
+            
+            ps.header.frame_id = 'base_link'
+            ps.pose = feedback.pose
+            
+            error = self._arm.compute_ik(ps)
+            # self._change_gripper_position(ps)
+            if error is True:
+                self._change_gripper_color(True, ps)
+            else:
+                rospy.loginfo("Could not find path to move arm")
+                self._change_gripper_color(False, ps)
+        else:
+            print "IDK"
+
 
 
 def main():
@@ -345,16 +547,16 @@ def main():
     gripper = fetch_api.Gripper()
     arm = fetch_api.Arm()
 
-    im_server = InteractiveMarkerServer('gripper_im_server')
+  #  im_server = InteractiveMarkerServer('gripper_im_server')
     # for running on real robot
-    # im_server = InteractiveMarkerServer('gripper_im_server', q_size = 2)
+    im_server = InteractiveMarkerServer('gripper_im_server', q_size = 2)
     auto_pick_im_server = InteractiveMarkerServer('auto_pick_im_server')
     # auto_pick_im_server = InteractiveMarkerServer('auto_pick_im_server', q_size = 2)
     teleop = GripperTeleop(arm, gripper, im_server)
-  # auto_pick = AutoPickTeleop(arm, gripper, auto_pick_im_server)
+    auto_pick = AutoPickTeleop(arm, gripper, auto_pick_im_server)
 
     teleop.start()
-   # auto_pick.start()
+    auto_pick.start()
     rospy.spin()
 
 if __name__ == "__main__":
