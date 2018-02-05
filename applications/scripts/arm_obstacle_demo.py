@@ -36,7 +36,7 @@ def main():
     x = table_x - (table_size_x / 2) + (size_x / 2)
     y = 0 
     z = table_z + (table_size_z / 2) + (size_z / 2)
-    # planning_scene.addBox('divider', size_x, size_y, size_z, x, y, z)
+    planning_scene.addBox('divider', size_x, size_y, size_z, x, y, z)
 
     pose1 = PoseStamped()
     pose1.header.frame_id = 'base_link'

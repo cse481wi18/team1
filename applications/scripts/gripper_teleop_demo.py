@@ -263,7 +263,10 @@ def main():
     arm = fetch_api.Arm()
 
     im_server = InteractiveMarkerServer('gripper_im_server')
+    # for running on real robot
+    # im_server = InteractiveMarkerServer('gripper_im_server', q_size = 2)
     auto_pick_im_server = InteractiveMarkerServer('auto_pick_im_server')
+    # auto_pick_im_server = InteractiveMarkerServer('auto_pick_im_server', q_size = 2)
     teleop = GripperTeleop(arm, gripper, im_server)
   # auto_pick = AutoPickTeleop(arm, gripper, auto_pick_im_server)
 
