@@ -37,7 +37,6 @@ class GripperTeleop(object):
         gripper_im.name = "Gripper"
         gripper_im.description = "Gripper"
         gripper_im.scale = .35
-
         
         # menu entries
         menu1 = MenuEntry()
@@ -91,8 +90,6 @@ class GripperTeleop(object):
         l_finger_marker.color.a = 1.0
         l_finger_marker.pose.position.x = X_OFFSET
    
-
-
         gripper_control.markers.append(copy.deepcopy(l_finger_marker))
 
          #right finger marker
@@ -106,11 +103,6 @@ class GripperTeleop(object):
         r_finger_marker.pose.position.x = X_OFFSET
 
         gripper_control.markers.append(copy.deepcopy(r_finger_marker))
-        
-        #doesn't work to translate the  marker positions
-        """for marker in gripper_control.markers:
-            marker.pose.position.x += .166"""
-
         gripper_im.controls.append(copy.deepcopy(gripper_control))
         dof_controls = self._make_6dof_controls()
         gripper_im.controls.extend(copy.deepcopy(dof_controls))
@@ -128,22 +120,15 @@ class GripperTeleop(object):
 
     # feedback pose is in the base_link frame of ref so we can call move_to_arm
     def handle_feedback(self, feedback):
-        print "call back"
-        
+
         if (feedback.event_type == InteractiveMarkerFeedback.MENU_SELECT):
             if feedback.menu_entry_id == 1:
                 self._gripper.open()
             elif feedback.menu_entry_id == 2:
                 self._gripper.close()
             else: 
-                print feedback.pose
                 ps = PoseStamped()
-
-                # TODO: The pose is given to us in gripper_link frame 
-                # but we need it to be in base_link frame so transformation??
                 ps.header.frame_id = 'base_link'
-
-                #adjusts to be directly on top of the (incorrectly placed) marker
                 ps.pose = feedback.pose
 
                 error = self._arm.move_to_pose(ps)
@@ -156,22 +141,18 @@ class GripperTeleop(object):
         elif feedback.event_type == InteractiveMarkerFeedback.POSE_UPDATE:
             print feedback.pose
             ps = PoseStamped()
-
-            # TODO: The pose is given to us in gripper_link frame 
-            # but we need it to be in base_link frame so transformation??
             
             ps.header.frame_id = 'base_link'
             ps.pose = feedback.pose
             
             error = self._arm.compute_ik(ps)
-            # self._change_gripper_position(ps)
             if error is True:
                 self._change_gripper_color(True, ps)
             else:
                 rospy.loginfo("Could not find path to move arm")
                 self._change_gripper_color(False, ps)
         else:
-            print "IDK"
+            pass
 
     # pose = PoseStamped
     # Marker has a Pose field
@@ -198,24 +179,6 @@ class GripperTeleop(object):
         self._im_server.applyChanges()
         
 
-    # pose is a PoseStamped
-    def _change_gripper_position(self, pose):
-        gripper_im = self._im_server.get("Gripper")
-        #gripper_im.pose = pose.pose
-        #temp_pose = copy.deepcopy(pose)
-        # transformed = self._transform_gripper_position(temp_pose.pose)
-        # temp_pose.pose.position = Point(transformed[0], transformed[1], transformed[2]) # applies the offset
-      
-        # for control in gripper_im.controls:
-        #     for marker in control.markers:
-        #         marker.pose = copy.deepcopy(pose.pose)
-        #         # if control.name == "gripper control":
-        #         #     marker.pose.position = temp_pose.pose.position
-
-        self._im_server.insert(gripper_im, feedback_cb=self.handle_feedback)
-        self._im_server.applyChanges()
-
-    
 
     # returns list of InteractiveMarkerControl
     def _make_6dof_controls(self): 
