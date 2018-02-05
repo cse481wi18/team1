@@ -168,9 +168,9 @@ class Arm(object):
         if not success:
             return False
         joint_state = response.solution.joint_state
-        for name, position in zip(joint_state.name, joint_state.position):
-            if name in ArmJoints.names():
-                rospy.loginfo('{}: {}'.format(name, position))
+        # for name, position in zip(joint_state.name, joint_state.position):
+        #     if name in ArmJoints.names():
+                # rospy.loginfo('{}: {}'.format(name, position))
         return True
 
 
