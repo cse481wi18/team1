@@ -195,4 +195,4 @@ class MoveItGoalBuilder(object):
         goal.planning_options.replan_attempts = self.replan_attempts
         goal.planning_options.replan_delay = self.replan_delay
 
-return goal
+        return goal

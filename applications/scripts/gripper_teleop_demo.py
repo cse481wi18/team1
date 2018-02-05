@@ -37,7 +37,7 @@ class GripperTeleop(object):
         gripper_im.name = "Gripper"
         gripper_im.description = "Gripper"
         gripper_im.scale = .35
-        
+
         # menu entries
         menu1 = MenuEntry()
         menu1.id = 1
@@ -267,6 +267,9 @@ class GripperTeleop(object):
         # this is the position vector that the gripper should be in
         return (temp4[0], temp4[1], temp4[2])
 
+
+
+
 class AutoPickTeleop(object):
     def __init__(self, arm, gripper, im_server):
         self._arm = arm
@@ -299,7 +302,7 @@ class AutoPickTeleop(object):
         gripper_marker.color.a = 1.0
         gripper_marker.scale.y = 1.05
         gripper_marker.scale.z = 1.05
-        gripper_marker.pose.position.x = X_OFFSET
+        gripper_marker.pose.position.x = -X_OFFSET
     
 
 
@@ -317,7 +320,7 @@ class AutoPickTeleop(object):
         l_finger_marker.color.g = 0.0
         l_finger_marker.color.b = 0.0
         l_finger_marker.color.a = 1.0
-        l_finger_marker.pose.position.x = X_OFFSET
+        l_finger_marker.pose.position.x = -X_OFFSET
    
 
 
@@ -331,13 +334,28 @@ class AutoPickTeleop(object):
         r_finger_marker.color.g = 0.0
         r_finger_marker.color.b = 0.0
         r_finger_marker.color.a = 1.0
-        r_finger_marker.pose.position.x = X_OFFSET
+        r_finger_marker.pose.position.x = -X_OFFSET
 
         gripper_control.markers.append(copy.deepcopy(r_finger_marker))
+
+
+        #object marker
+        box_marker = Marker()
+        box_marker.type = Marker.CUBE
+        box_marker.color.r = 0.7
+        box_marker.color.g = 0.7
+        box_marker.color.b = 0.0 
+        box_marker.color.a = 1.0
+        box_marker.scale.x = 0.05
+        box_marker.scale.y = 0.05
+        box_marker.scale.z = 0.05
+        # box_marker.pose.position.x = X_OFFSET + 0.01
+        box_marker.id = 5
+
+        gripper_control.markers.append(copy.deepcopy(box_marker))
+   
         
         #doesn't work to translate the  marker positions
-        """for marker in gripper_control.markers:
-            marker.pose.position.x += .166"""
 
         gripper_im.controls.append(copy.deepcopy(gripper_control))
         dof_controls = self._make_6dof_controls()
@@ -397,61 +415,33 @@ class AutoPickTeleop(object):
     # Marker has a Pose field
     def _change_gripper_color(self, success, pose):
         gripper_im = self._im_server.get("Gripper")
-        # print pose.pose
-        # print "--------"
-        # print gripper_im.pose
+
         if success:
             for control in gripper_im.controls:
                 for marker in control.markers:
-                    marker.color.r = 0.0
-                    marker.color.g = 1.0
-                    marker.color.b = 0.0
-                    marker.color.a = 1.0  
-                    # if control.name == "gripper control":
-                    #     marker.pose.orientation = pose.pose.orientation
-                    #     marker.pose.position.y = pose.pose.position.y
-                    #     marker.pose.position.z = pose.pose.position.z
-                    #     marker.pose.position.x = pose.pose.position.x + X_OFFSET
+                    if marker.id != 5: # cube
+                        marker.color.r = 0.0
+                        marker.color.g = 1.0
+                        marker.color.b = 0.0
+                        marker.color.a = 1.0  
+
         else: 
             for control in gripper_im.controls:
                 for marker in control.markers:
-                    marker.color.r = 1.0
-                    marker.color.g = 0.0
-                    marker.color.b = 0.0
-                    marker.color.a = 1.0
-                    # if control.name == "gripper control":
-                    #     marker.pose.orientation = pose.pose.orientation
-                    #     marker.pose.position.y = pose.pose.position.y
-                    #     marker.pose.position.z = pose.pose.position.z
-                    #     marker.pose.position.x = pose.pose.position.x + X_OFFSET
+                    if marker.id != 5: # cube
+                        marker.color.r = 1.0
+                        marker.color.g = 0.0
+                        marker.color.b = 0.0
+                        marker.color.a = 1.0
 
         self._im_server.insert(gripper_im, feedback_cb=self.handle_feedback)
         self._im_server.applyChanges()
         
-
-    # pose is a PoseStamped
-    def _change_gripper_position(self, pose):
-        gripper_im = self._im_server.get("Gripper")
-        #gripper_im.pose = pose.pose
-        #temp_pose = copy.deepcopy(pose)
-        # transformed = self._transform_gripper_position(temp_pose.pose)
-        # temp_pose.pose.position = Point(transformed[0], transformed[1], transformed[2]) # applies the offset
-      
-        # for control in gripper_im.controls:
-        #     for marker in control.markers:
-        #         marker.pose = copy.deepcopy(pose.pose)
-        #         # if control.name == "gripper control":
-        #         #     marker.pose.position = temp_pose.pose.position
-
-        self._im_server.insert(gripper_im, feedback_cb=self.handle_feedback)
-        self._im_server.applyChanges()
 
     def handle_feedback(self, feedback):
-        print "call back"
-        
+
         if (feedback.event_type == InteractiveMarkerFeedback.MENU_SELECT):
             if feedback.menu_entry_id == 1:
-                print feedback.pose
                 ps = PoseStamped()
 
                 # TODO: The pose is given to us in gripper_link frame 
@@ -459,25 +449,29 @@ class AutoPickTeleop(object):
                 ps.header.frame_id = 'base_link'
 
                 #adjusts to be directly on top of the (incorrectly placed) marker
-                ps.pose = feedback.pose
-                ps.pose.position.x = feedback.pose.position.x
+                ps.pose = self._object_pose_to_gripper_pose(feedback.pose)
 
-                raised_ps = PoseStamped()
-                raised_ps.header.frame_id = 'base_link'
-
-                #adjusts to be directly on top of the (incorrectly placed) marker
-                raised_ps.pose = feedback.pose
-                raised_ps.pose.position.y = feedback.pose.position.y + 1
-                print "moving to pose"
                 error = self._arm.move_to_pose(ps)
 
                 if error is None:
-                    
+                    print ps
                     self._change_gripper_color(True, ps)
                     print "closing gripper"
                     self._gripper.close()
                     print "raising arm"
-                    self._arm.move_to_pose(raised_ps)
+
+                    raised_ps = PoseStamped()
+                    raised_ps.header.frame_id = 'base_link'
+
+                    #adjusts to be directly on top of the (incorrectly placed) marker
+                    raised_ps.pose = feedback.pose
+                    raised_ps.pose.position.z = feedback.pose.position.z + .05
+
+                    print "moving to pose"
+                    print raised_ps
+                    error = self._arm.move_to_pose(raised_ps)
+                    if error is not None:
+                        print error
                 else:
                     print "could not move"
                     self._change_gripper_color(False, ps)
@@ -489,17 +483,47 @@ class AutoPickTeleop(object):
             # but we need it to be in base_link frame so transformation??
             
             ps.header.frame_id = 'base_link'
-            ps.pose = feedback.pose
+            ps.pose = self._object_pose_to_gripper_pose(feedback.pose)
+            
             
             error = self._arm.compute_ik(ps)
-            # self._change_gripper_position(ps)
+           
             if error is True:
                 self._change_gripper_color(True, ps)
             else:
                 rospy.loginfo("Could not find path to move arm")
                 self._change_gripper_color(False, ps)
         else:
-            print "IDK"
+            pass
+
+
+    # pose is a Pose, not PoseStamped
+    # pose has position (Point) and orientation (Quaternion)
+    # given pose of object, return pose of gripper in base link frame
+    def _object_pose_to_gripper_pose(self, pose):
+        # have to do math "backwards" because of matrix multiplication
+
+        # transformation of object in base link frame  
+        q = pose.orientation
+        b_T_o = tft.quaternion_matrix([q.x, q.y, q.z, q.w]) 
+        b_T_o[:,3] = (pose.position.x, pose.position.y, pose.position.z, 1) 
+
+        # transformation of gripper in object frame
+        o_T_g = numpy.identity(4)
+        o_T_g[0, 3] = -2 * X_OFFSET
+
+        # want transformation of gripper in base link frame, aka b_T_g
+        b_T_g = numpy.dot(b_T_o, o_T_g)
+
+        # transform this back into a pose 
+        result = Pose()
+        result.position = Point(b_T_g[0, 3], b_T_g[1, 3], b_T_g[2, 3])
+        temp = tft.quaternion_from_matrix(b_T_g)
+        result.orientation = Quaternion(temp[0], temp[1], temp[2], temp[3])
+        
+        return result
+
+       
 
 
 
