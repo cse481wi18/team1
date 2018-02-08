@@ -116,9 +116,8 @@ class ProgramManager(object):
             return -1
         self._start_arm_controller()
 
-        self._current_program = program
 
-        for (pose, relative) in self._current_program:
+        for (pose, relative) in program:
             if pose == 'open_gripper': 
                 self._gripper.open()
             elif pose == 'close_gripper':
