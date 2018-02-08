@@ -108,7 +108,7 @@ if __name__ == "__main__":
                     if result == -1:
                         print "Unable to save current pose in reference frame " + user_commands[1]
                     else:
-                        print "Saved current pose in reference frame " + user_commands[1] + "to action"
+                        print "Saved current pose in reference frame " + user_commands[1] + " to action"
             elif user_commands[0] == 'load':
                 if name is not None:
                     print "Save or delete current poses before loading a new action"
@@ -125,7 +125,7 @@ if __name__ == "__main__":
                 if name is None:
                     print "No action to delete"
                 else:
-                    result = program_manager.delete_all()
+                    result = program_manager.delete_current_program()
                     if result == -1:
                         print "Unable to delete current action"
                     else:
@@ -149,7 +149,7 @@ if __name__ == "__main__":
                     if result == -1:
                         print "Unable to run action named " + user_commands[1]
                     else:
-                        print "Running action named " + user_commands[1]
+                        print "Completed action named " + user_commands[1]
             elif user_commands[0] == "help":
                 print msg
             
@@ -157,5 +157,5 @@ if __name__ == "__main__":
         rospy.logerr('{}'.format(e))
     finally:
         if name is not None:
-            program_manager.pickle_dump(name)
+            program_manager.end_program()
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
