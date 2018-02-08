@@ -60,20 +60,22 @@ class ProgramManager(object):
 
         return 0
     
+    # TODO
     # special case of save_pose
     def open_gripper(self):
         if not self._in_progress:
             return -1 # program saving not in progress
         
-        self._current_program.append(OPEN POSE HERE)
+        # self._current_program.append(OPEN POSE HERE)
         return 0
     
+    # TODO
     # special case of save_pose
     def close_gripper(self):
         if not self._in_progress:
             return -1 # program saving not in progress
         
-        self._current_program.append(CLOSE POSE HERE)
+        # self._current_program.append(CLOSE POSE HERE)
         return 0
 
     

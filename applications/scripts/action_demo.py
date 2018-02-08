@@ -4,8 +4,9 @@ import fetch_api
 import rospy
 
 import sys, select, termios, tty
+import perception
 
-from perception import ProgramManager
+# from perception import ProgramManager
 
 msg = """
 Welcome to the Action Creator!
@@ -51,7 +52,7 @@ if __name__ == "__main__":
 
     wait_for_time()
 
-    program_manager = ProgramManager()
+    program_manager = perception.ProgramManager()
     name = None
     
     try:
