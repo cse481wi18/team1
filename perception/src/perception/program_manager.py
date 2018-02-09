@@ -59,7 +59,7 @@ class ProgramManager(object):
     def delete_current_program(self):
         self._current_program = []
         self._in_progress = False 
-        self._current_program_name = Non
+        self._current_program_name = None
         return 0
 
     # appends current pose, relative to frame, to the current program
@@ -83,31 +83,39 @@ class ProgramManager(object):
             if not current_marker:
                 print "Could not find marker " + frame
                 return -1
+            
+            print "1"
+
             # Get transfrom matrix from base to wrist 
             (pos_b, quat_b) = self._listener.lookupTransform('base_link', 'wrist_roll_link', rospy.Time(0))
+    
             b_w_matrix = tft.quaternion_matrix(quat_b)
             # set 4th col of transformation matrix to be translation (aka position) vector
-            b_w_matrix[:, 3] = (pose.position.x, pose.position.y, pose.position.z, 1) 
+            pos_b.append(1)
+            b_w_matrix[:, 3] = pos_b 
 
-            #Get transfromation matrix from base to tag and invert it
+            # current_marker has a pose relative to base frame, aka b_T_tag. We need tag_T_b.
+            #Get transfromation matrix from tag to base and invert it
             t_pos = current_marker.pose.pose.position
-            t_pose = (t_pos.x, t_pos.y, t_pos.z, 1)
-
-            # original rotation in base link frame
+            print "2"
+            # original marker rotation in base link frame
             t_q = pose.orientation
         
+            # b_t_matrix is b_T_tag
             b_t_matrix = tft.quaternion_matrix([t_q.x, t_q.y, t_q.z, t_q.w]) 
-            b_t_matrix[:, 3] = (pose.position.x, pose.position.y, pose.position.z, 1) 
+            b_t_matrix[:, 3] = (t_pos.x, t_pos.y, t_pos.z, 1) 
 
+            # t_b_matrix is tag_T_b
             t_b_matrix= np.linalg.inv(b_t_matrix)
 
-            # multiply t_b by b_w
+            # multiply t_b by b_w to get tag_T_w
             t_w_matrix = np.dot(t_b_matrix, b_w_matrix)
-
+            print "3"
             pose.position = Point(t_w_matrix [0, 3], t_w_matrix [1, 3], t_w_matrix [2, 3])
             temp = tft.quaternion_from_matrix(t_w_matrix)
             pose.orientation = Quaternion(temp[0], temp[1], temp[2], temp[3])
             relative = frame
+            print "4"
 
         self._current_program.append((pose, relative))
 
@@ -179,49 +187,56 @@ class ProgramManager(object):
                     error = self._arm.move_to_pose(ps)
                     if error is not None:
                         rospy.logerr(error)
-                else:
-                    temp_pose = pose
+                else: # relative to some tag
+                    tag_w_pose = pose # temp_pose is tag_T_w, wrist relative to tag
+                    
 
                     current_marker = None
                     for marker in self._reader.markers:
                         print marker.id
                         if int(relative) == marker.id:
                             current_marker = marker
-                    if not current_marker:
+                    if current_marker is None:
                         print "Could not find marker " + relative
                         return -1
+
+
                     # Get transfrom matrix from base to wrist 
                     print "step 1"
-                    (pos_tw, quat_tw) = temp_pose.position, temp_pose.orientation
+                    (tag_w_pos, tag_w_quat) = tag_w_pose.position, tag_w_pose.orientation
+                   
                     print "hi mom!"
-                    t_w_matrix = tft.quaternion_matrix([quat_tw.x, quat_tw.y, quat_tw.z, quat_tw.w])
+                    t_w_matrix = tft.quaternion_matrix([tag_w_quat.x, tag_w_quat.y, tag_w_quat.z, tag_w_quat.w])
                     # set 4th col of transformation matrix to be translation (aka position) vector
                     print "messg"
-                    t_w_matrix[:, 3] = (pos_tw.x, pos_tw.y, pos_tw.z, 1) 
+                    t_w_matrix[:, 3] = (tag_w_pos.x, tag_w_pos.y, tag_w_pos.z, 1) 
 
+                    # t_w_matrix is tag_T_w
+
+                    # find b_T_tag
                     print "step 2"
                     #Get transfromation matrix from base to tag
                     t_pos = current_marker.pose.pose.position
-                    t_pose = (t_pos.x, t_pos.y, t_pos.z, 1)
 
                     print "step 3"
 
                     # original rotation in base link frame
-                    t_q = temp_pose.orientation
+                    t_q = current_marker.pose.pose.orientation
                                     
                                     
                     print "step 4"
 
 
                     b_t_matrix = tft.quaternion_matrix([t_q.x, t_q.y, t_q.z, t_q.w]) 
-                    b_t_matrix[:, 3] = (temp_pose.position.x, temp_pose.position.y, temp_pose.position.z, 1) 
+                    b_t_matrix[:, 3] = (t_pos.x, t_pos.y, t_pos.z, 1) 
 
+                    # b_t_matrix is b_T_tag
 
                     # multiply t_w by b_t       
-                    b_w_matrix = np.dot(t_w_matrix, b_t_matrix)
+                    b_w_matrix = np.dot(b_t_matrix, t_w_matrix)
 
                     print "step 56"
-
+                    temp_pose = Pose()
                     temp_pose.position = Point(b_w_matrix [0, 3], b_w_matrix [1, 3], b_w_matrix [2, 3])
                     temp = tft.quaternion_from_matrix(b_w_matrix)
                     temp_pose.orientation = Quaternion(temp[0], temp[1], temp[2], temp[3])
@@ -231,6 +246,9 @@ class ProgramManager(object):
                     error = self._arm.move_to_pose(ps)
                     if error is not None:
                         rospy.logerr(error)
+                        
+            rospy.sleep(1)
+
         return 0
 
     # must call before setting poses/creating program
@@ -264,4 +282,5 @@ class ProgramManager(object):
         except Exception as e:
             return -1
 
+    
     
