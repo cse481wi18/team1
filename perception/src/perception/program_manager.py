@@ -16,6 +16,10 @@ class ArTagReader(object):
     def __init__(self):
         self.markers = []
 
+        # while saving a program, don't update the position of the markers even if they change in real life 
+        # this is so we can do things like move markers side to side
+        self._current_markers 
+
     def callback(self, msg):
         self.markers = msg.markers
 
@@ -41,6 +45,7 @@ class ProgramManager(object):
         self._in_progress = True 
         self._current_program_name = name
         self._listener = tf.TransformListener()
+        self._current_markers = self._reader.markers
         self._relax_arm_controller()
     
 
@@ -113,11 +118,11 @@ class ProgramManager(object):
         
             pose.position = Point(t_w_matrix [0, 3], t_w_matrix [1, 3], t_w_matrix [2, 3])
             temp = tft.quaternion_from_matrix(t_w_matrix)
-            # pose.orientation = Quaternion(temp[0], temp[1], temp[2], temp[3])
+            pose.orientation = Quaternion(temp[0], temp[1], temp[2], temp[3])
 
             # save orientation relative to base even though position relative to tag, since tag orientation is arbitrary
             # so we store the position of the wrist relative to the marker, but the orientation of the wrist relative to the base
-            pose.orientation = Quaternion(quat_b[0], quat_b[1], quat_b[2], quat_b[3])
+            # pose.orientation = Quaternion(quat_b[0], quat_b[1], quat_b[2], quat_b[3])
             relative = frame
           
 
@@ -239,14 +244,14 @@ class ProgramManager(object):
                     temp_pose.position = Point(b_w_matrix [0, 3], b_w_matrix [1, 3], b_w_matrix [2, 3])
                    
                     # COMMENT THIS BACK IN TO NOT DO THE IDENTITY ORIENTATION
-                    # temp = tft.quaternion_from_matrix(b_w_matrix)
-                    # temp_pose.orientation = Quaternion(temp[0], temp[1], temp[2], temp[3])
+                    temp = tft.quaternion_from_matrix(b_w_matrix)
+                    temp_pose.orientation = Quaternion(temp[0], temp[1], temp[2], temp[3])
 
                      # move to pose with identity orientation and position of marker, since marker in arbitrary orientation (says Justin)
                     # temp_pose.orientation = Quaternion(0, 0, 0, 1)
 
                     # KEEP THE WRIST ORIENTATION RELATIVE TO THE BASE
-                    temp_pose.orientation = final_wrist_orientation_in_base_frame
+                    # temp_pose.orientation = final_wrist_orientation_in_base_frame
                     ps.pose = temp_pose
 
                 
@@ -277,6 +282,12 @@ class ProgramManager(object):
         goal.updates.append(state)
         self._controller_client.send_goal(goal)
         self._controller_client.wait_for_result(rospy.Duration(1))
+
+    def get_tags(self):
+        result = []
+        for marker in self._reader.markers:
+            result.append(marker)
+        return result
 
     # saves current program to a pickle file name
     def _pickle_dump(self, filename, obj):
