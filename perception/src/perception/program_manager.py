@@ -16,10 +16,6 @@ class ArTagReader(object):
     def __init__(self):
         self.markers = []
 
-        # while saving a program, don't update the position of the markers even if they change in real life 
-        # this is so we can do things like move markers side to side
-        self._current_markers 
-
     def callback(self, msg):
         self.markers = msg.markers
 
@@ -32,6 +28,9 @@ class ProgramManager(object):
         self._arm = fetch_api.Arm()
         self._gripper = fetch_api.Gripper()
         self._reader = ArTagReader()
+        # while saving a program, don't update the position of the markers even if they change in real life 
+        # this is so we can do things like move markers side to side
+        self._current_markers = []
         self._subscriber = rospy.Subscriber('/ar_pose_marker', AlvarMarkers, callback=self._reader.callback) # Subscribe to AR tag poses, use reader.callback
 
         self._controller_client = actionlib.SimpleActionClient('query_controller/controller_state', QueryControllerStatesAction)
@@ -81,7 +80,8 @@ class ProgramManager(object):
             relative = 'base_link' 
         else : # some tag
             current_marker = None
-            for marker in self._reader.markers:
+            # don't use real time markers, use markers saved at the start of the program
+            for marker in self._current_markers:
                 print marker.id
                 if int(frame) == marker.id:
                     current_marker = marker
@@ -89,7 +89,6 @@ class ProgramManager(object):
                 print "Could not find marker " + frame
                 return -1
             
-
 
             # Get transfrom matrix from base to wrist 
             (pos_b, quat_b) = self._listener.lookupTransform('base_link', 'wrist_roll_link', rospy.Time(0))
@@ -127,7 +126,6 @@ class ProgramManager(object):
           
 
         self._current_program.append((pose, relative))
-
         return 0
     
     # special case of save_pose
@@ -159,7 +157,6 @@ class ProgramManager(object):
         self._current_program = []
         self._in_progress = False
 
-    # TODO
     # executes program
     # returns -1 on error
     def run_program(self, name): 
@@ -167,7 +164,7 @@ class ProgramManager(object):
         if program == -1:
             return -1
         self._start_arm_controller()
-
+        self._current_markers = self._reader.markers
 
         for (pose, relative) in program:
             if pose == 'open_gripper': 
@@ -201,7 +198,7 @@ class ProgramManager(object):
                     
 
                     current_marker = None
-                    for marker in self._reader.markers:
+                    for marker in self._current_markers:
                         print marker.id
                         if int(relative) == marker.id:
                             current_marker = marker

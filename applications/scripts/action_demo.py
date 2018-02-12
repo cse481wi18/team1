@@ -20,11 +20,12 @@ Commands:
   run <name>: runs the action saved as <name>
   end: finish editing the current action and save the action
   delete: delete the current action and all poses in it
+  tags: get the ids of all markers currently detected
   help: Show this list of commands
   quit: end this program
 """
 
-commands = {'list', 'save', 'create', 'end', 'delete', 'open', 'close', 'load', 'run', 'help', 'quit'}
+commands = {'list', 'save', 'create', 'end', 'delete', 'open', 'close', 'load', 'run', 'help', 'quit', 'tags'}
 
 
 def getLine():
@@ -150,6 +151,10 @@ if __name__ == "__main__":
                         print "Unable to run action named " + user_commands[1]
                     else:
                         print "Completed action named " + user_commands[1]
+            elif user_commands[0] == 'tags':           
+                result = program_manager.get_tags()
+                for tag in result:
+                    print tag.id
             elif user_commands[0] == "help":
                 print msg
             
