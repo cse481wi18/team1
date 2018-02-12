@@ -110,6 +110,7 @@ catkin_package(
   LIBRARIES 
     perception_crop
     perception_downsampler
+    perception_segmentation
 #  CATKIN_DEPENDS roscpp rospy
 #  DEPENDS system_lib
 )
@@ -131,6 +132,7 @@ include_directories(
 # )
 add_library(perception_crop src/crop.cpp)
 add_library(perception_downsampler src/downsampler.cpp)
+add_library(perception_segmentation src/segmentation.cpp)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -138,6 +140,9 @@ add_library(perception_downsampler src/downsampler.cpp)
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(perception_crop ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(perception_downsampler ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(perception_segmentation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
@@ -164,13 +169,19 @@ target_link_libraries(perception_save_cloud_main
 target_link_libraries(perception_point_cloud_demo
   perception_crop
   perception_downsampler
+  perception_segmentation
   ${catkin_LIBRARIES}
 )
+
 target_link_libraries(perception_crop 
   ${catkin_LIBRARIES}
 )
 
 target_link_libraries(perception_downsampler 
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(perception_segmentation 
   ${catkin_LIBRARIES}
 )
 

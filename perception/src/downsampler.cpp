@@ -24,6 +24,7 @@ void perception::Downsampler::Callback(const sensor_msgs::PointCloud2& msg) {
     vox.filter(*downsampled_cloud);
 
 
+
     ROS_INFO("Downsampled to %ld points", downsampled_cloud->size());
     sensor_msgs::PointCloud2 msg_out;
     pcl::toROSMsg(*downsampled_cloud, msg_out);
