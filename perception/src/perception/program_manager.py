@@ -113,7 +113,11 @@ class ProgramManager(object):
         
             pose.position = Point(t_w_matrix [0, 3], t_w_matrix [1, 3], t_w_matrix [2, 3])
             temp = tft.quaternion_from_matrix(t_w_matrix)
-            pose.orientation = Quaternion(temp[0], temp[1], temp[2], temp[3])
+            # pose.orientation = Quaternion(temp[0], temp[1], temp[2], temp[3])
+
+            # save orientation relative to base even though position relative to tag, since tag orientation is arbitrary
+            # so we store the position of the wrist relative to the marker, but the orientation of the wrist relative to the base
+            pose.orientation = Quaternion(quat_b[0], quat_b[1], quat_b[2], quat_b[3])
             relative = frame
           
 
@@ -200,8 +204,8 @@ class ProgramManager(object):
                         print "Could not find marker " + relative
                         return -1
 
-
-                    # Get transfrom matrix from base to wrist 
+                    final_wrist_orientation_in_base_frame = pose.orientation
+                    # Get transfrom matrix from tag to wrist 
                     (tag_w_pos, tag_w_quat) = tag_w_pose.position, tag_w_pose.orientation
                     t_w_matrix = tft.quaternion_matrix([tag_w_quat.x, tag_w_quat.y, tag_w_quat.z, tag_w_quat.w])
                    
@@ -239,8 +243,10 @@ class ProgramManager(object):
                     # temp_pose.orientation = Quaternion(temp[0], temp[1], temp[2], temp[3])
 
                      # move to pose with identity orientation and position of marker, since marker in arbitrary orientation (says Justin)
-                    temp_pose.orientation = Quaternion(0, 0, 0, 1)
-                    
+                    # temp_pose.orientation = Quaternion(0, 0, 0, 1)
+
+                    # KEEP THE WRIST ORIENTATION RELATIVE TO THE BASE
+                    temp_pose.orientation = final_wrist_orientation_in_base_frame
                     ps.pose = temp_pose
 
                 
