@@ -55,6 +55,7 @@
   <depend>tf</depend>
   <depend>rosbag</depend>
   <depend>rospy</depend>
+  <depend>simple_grasping</depend>
 
 
 
