@@ -11,7 +11,6 @@ typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudC;
 
 perception::Cropper::Cropper(const ros::Publisher& pub) : pub_(pub) {}
 
-
 void perception::Cropper::Callback(const sensor_msgs::PointCloud2& msg) {
   PointCloudC::Ptr cloud(new PointCloudC());
   pcl::fromROSMsg(msg, *cloud);

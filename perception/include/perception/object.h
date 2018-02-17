@@ -8,9 +8,10 @@
 #include "pcl/point_cloud.h"
 #include "pcl/point_types.h"
 
+
 namespace perception {
     struct Object {
-        string name;
+        std::string name;
         double confidence;
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud;
         geometry_msgs::Pose pose;
