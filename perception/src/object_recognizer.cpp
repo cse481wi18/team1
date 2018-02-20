@@ -57,7 +57,7 @@ namespace perception {
                                     double* confidence) {
       // TODO: extract features from the object
       perception_msgs::ObjectFeatures features;
-      ExtractSizeFeatures(object, &features);
+      ExtractFeatures(object, &features);
       double min_distance = std::numeric_limits<double>::max();
       double second_min_distance = std::numeric_limits<double>::max();
       for (size_t i = 0; i < dataset_.size(); ++i) {
