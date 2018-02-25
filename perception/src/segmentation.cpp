@@ -31,7 +31,7 @@ namespace perception {
         seg.setModelType(pcl::SACMODEL_PERPENDICULAR_PLANE);
         seg.setMethodType(pcl::SAC_RANSAC);
         // Set the distance to the plane for a point to be an inlier.
-        seg.setDistanceThreshold(0.01);
+        seg.setDistanceThreshold(.01);
         seg.setInputCloud(cloud);
 
         // Make sure that the plane is perpendicular to Z-axis, 10 degree tolerance.
@@ -108,7 +108,7 @@ namespace perception {
       recognizer_(recognizer) {}
 
     void SegmentTabletopScene(PointCloudC::Ptr cloud,
-                          std::vector<Object>* objects) {
+                          std::vector<Object>* objects, const ros::Publisher& surface_points_pub_) {
 
         pcl::PointIndices::Ptr table_inliers(new pcl::PointIndices());
 
@@ -123,7 +123,28 @@ namespace perception {
         extract.setIndices(table_inliers);
         extract.filter(*segmented);
 
-        ROS_INFO("Segmented to %ld points", segmented->size());
+        ROS_INFO("000Segmented to %ld points", segmented->size());
+        sensor_msgs::PointCloud2 msg_out;
+        pcl::toROSMsg(*segmented, msg_out);
+        surface_points_pub_.publish(msg_out);
+        shape_msgs::SolidPrimitive shape;
+        geometry_msgs::Pose pose;
+            
+        pcl::PointCloud<pcl::PointXYZRGB> output;
+        FitBox(*segmented, model, output, shape, pose);
+                    geometry_msgs::Vector3 dimensions;
+            dimensions.x = shape.dimensions[0];
+            dimensions.y = shape.dimensions[1];
+            dimensions.z = shape.dimensions[2];
+
+        Object object;
+            object.name = "object";
+            object.confidence = .5;
+            object.cloud = segmented;
+            object.pose = pose;
+            object.dimensions = dimensions;
+
+            objects->push_back(object);
 
         std::vector<pcl::PointIndices> object_indices;
         SegmentSurfaceObjects(cloud, table_inliers, &object_indices);
@@ -176,8 +197,9 @@ namespace perception {
         std::vector<int> index;
         pcl::removeNaNFromPointCloud(*cloud_unfiltered, *cloud, index);
 
+
         std::vector<Object> objects;
-        SegmentTabletopScene(cloud, &objects);
+        SegmentTabletopScene(cloud, &objects, surface_points_pub_);
 
         for (size_t i = 0; i < objects.size(); ++i) {
             const Object& object = objects[i];

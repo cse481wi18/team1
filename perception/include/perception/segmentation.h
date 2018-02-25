@@ -39,7 +39,7 @@ void GetAxisAlignedBoundingBox(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
 //  cloud: The point cloud with the surface and the objects above it.
 //  objects: The output objects.
 void SegmentTabletopScene(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
-                          std::vector<Object>* objects);
+                          std::vector<Object>* objects, const ros::Publisher& surface_points_pub_);
 
 
 void SegmentSurfaceObjects(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,

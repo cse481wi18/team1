@@ -78,7 +78,10 @@ int main(int argc, char** argv) {
   Crop(pcl_cloud, cropped_cloud);
 
   std::vector<perception::Object> objects;
-  perception::SegmentTabletopScene(cropped_cloud, &objects);
+      ros::NodeHandle nh;
+      ros::Publisher table_pub =
+        nh.advertise<sensor_msgs::PointCloud2>("table_cloud", 1, true);
+  perception::SegmentTabletopScene(cropped_cloud, &objects, table_pub);
   if (objects.size() != 1) {
     std::cerr << "Expected to see exactly one object, found " << objects.size()
               << std::endl;

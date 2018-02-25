@@ -8,6 +8,6 @@
   <param name="crop_max_x" value="1.05" />
   <param name="crop_min_z" value="0.7" />
   <node pkg="perception" type="point_cloud_demo" name="point_cloud_demo" output="screen">
-    <remap from="cloud_in" to="mock_point_cloud" />
+    <remap from="cloud_in" to="head_camera/depth_downsample/points" />
   </node>
 </launch>

@@ -159,6 +159,7 @@ add_dependencies(perception_object_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS
 add_executable(perception_save_cloud_main src/save_cloud_main.cpp)
 add_executable(perception_extract_features_main src/extract_features_main.cpp)
 add_executable(perception_point_cloud_demo src/point_cloud_demo.cpp)
+add_executable(perception_table_recognizer_main src/table_recognizer_main.cpp)
 
 
 ## Rename C++ executable without prefix
@@ -168,12 +169,16 @@ add_executable(perception_point_cloud_demo src/point_cloud_demo.cpp)
 set_target_properties(perception_save_cloud_main PROPERTIES OUTPUT_NAME save_cloud PREFIX "")
 set_target_properties(perception_point_cloud_demo PROPERTIES OUTPUT_NAME point_cloud_demo PREFIX "")
 set_target_properties(perception_extract_features_main PROPERTIES OUTPUT_NAME extract_features PREFIX "")
+set_target_properties(perception_table_recognizer_main PROPERTIES OUTPUT_NAME extract_features PREFIX "")
+
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(perception_save_cloud_main ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(perception_point_cloud_demo ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(perception_extract_features_main ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(perception_table_recognizer_main ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(perception_save_cloud_main
@@ -188,6 +193,17 @@ target_link_libraries(perception_point_cloud_demo
   perception_object_recognizer
   ${catkin_LIBRARIES}
 )
+
+target_link_libraries(perception_table_recognizer_main
+  perception_crop
+  perception_downsampler
+  perception_segmentation
+  perception_fitbox
+  perception_feature_extraction
+  perception_object_recognizer
+  ${catkin_LIBRARIES}
+)
+
 target_link_libraries(perception_extract_features_main
   perception_crop
   perception_downsampler
