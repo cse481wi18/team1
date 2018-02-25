@@ -11,7 +11,7 @@
 
 int main(int argc, char** argv) {
      // LAB 30
-    ros::init(argc, argv, "table_recognizer");
+    ros::init(argc, argv, "table_recognizer_main");
     ros::NodeHandle nh;
     ros::Publisher crop_pub =
         nh.advertise<sensor_msgs::PointCloud2>("cropped_cloud", 1, true);
@@ -37,8 +37,8 @@ int main(int argc, char** argv) {
 
     // LAB 34
     std::vector<perception_msgs::ObjectFeatures> dataset;
-    
-    perception::LoadData('/objects/combined_labels', &dataset);
+     std::string data_dir("/home/team1/catkin_ws/src/cse481wi18/objects/combined_labels");
+    perception::LoadData(data_dir, &dataset);
     perception::ObjectRecognizer recognizer(dataset);
 
     perception::Segmenter segmenter(table_pub, marker_pub, object_pub, recognizer);

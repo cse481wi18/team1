@@ -169,7 +169,7 @@ add_executable(perception_table_recognizer_main src/table_recognizer_main.cpp)
 set_target_properties(perception_save_cloud_main PROPERTIES OUTPUT_NAME save_cloud PREFIX "")
 set_target_properties(perception_point_cloud_demo PROPERTIES OUTPUT_NAME point_cloud_demo PREFIX "")
 set_target_properties(perception_extract_features_main PROPERTIES OUTPUT_NAME extract_features PREFIX "")
-set_target_properties(perception_table_recognizer_main PROPERTIES OUTPUT_NAME extract_features PREFIX "")
+set_target_properties(perception_table_recognizer_main PROPERTIES OUTPUT_NAME table_recognizer_main PREFIX "")
 
 
 ## Add cmake target dependencies of the executable
