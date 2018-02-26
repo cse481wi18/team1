@@ -17,6 +17,8 @@
 #include "perception/object.h"
 #include "perception/object_recognizer.h"
 #include "perception/feature_extraction.h"
+#include "perception_msgs/ObjectCoordinates.h"
+#include "geometry_msgs/Point.h"
 
 
 typedef pcl::PointXYZRGB PointC;
@@ -26,26 +28,28 @@ namespace perception {
     void SegmentSurface(PointCloudC::Ptr cloud, pcl::PointIndices::Ptr indices, pcl::ModelCoefficients::Ptr coeff) {
         pcl::PointIndices indices_internal;
         pcl::SACSegmentation<PointC> seg;
+        ROS_INFO("beginning of segment surface");
         seg.setOptimizeCoefficients(true);
         // Search for a plane perpendicular to some axis (specified below).
-        seg.setModelType(pcl::SACMODEL_PERPENDICULAR_PLANE);
+        seg.setModelType(pcl::SACMODEL_PARALLEL_PLANE);
         seg.setMethodType(pcl::SAC_RANSAC);
         // Set the distance to the plane for a point to be an inlier.
-        seg.setDistanceThreshold(.01);
+        seg.setDistanceThreshold(.0001);
         seg.setInputCloud(cloud);
 
         // Make sure that the plane is perpendicular to Z-axis, 10 degree tolerance.
         Eigen::Vector3f axis;
-        axis << 0, 0, 1;
+        axis << 1, 0, 0;
         seg.setAxis(axis);
         seg.setEpsAngle(pcl::deg2rad(10.0));
 
         // coeff contains the coefficients of the plane:
         // ax + by + cz + d = 0
         seg.segment(indices_internal, *coeff);
+   
 
         double distance_above_plane;
-        ros::param::param("distance_above_plane", distance_above_plane, 0.005);
+        ros::param::param("distance_above_plane", distance_above_plane, 0.05);
  
         // Build custom indices that ignores points above the plane.
         for (size_t i = 0; i < cloud->size(); ++i) {
@@ -77,6 +81,7 @@ namespace perception {
         PointC min;
         PointC max;
         pcl::getMinMax3D<PointC>(*cloud, min, max);
+         ROS_INFO("POSE %f %f %f %f ", (float)  min.x, (float)min.y,(float)  max.x, (float)max.y);
 
         pose->position.x = (max.x + min.x) / 2;
         pose->position.y = (max.y + min.y) / 2;
@@ -92,8 +97,6 @@ namespace perception {
         dimensions->y = max.y - min.y;
         dimensions->z = max.z - min.z;
 
-       
-
         ROS_INFO("POSE %f %f %f", (float)  pose->position.x,(float)  pose->position.y,(float) pose->position.z);
         ROS_INFO("Dim %f %f %f", (float) dimensions->x,(float) dimensions->y,(float)dimensions->z);
     }
@@ -101,10 +104,12 @@ namespace perception {
    Segmenter::Segmenter(const ros::Publisher& surface_points_pub,
                      const ros::Publisher& marker_pub,
                      const ros::Publisher& object_pub,
+                     const ros::Publisher& coord_pub,
                      const ObjectRecognizer& recognizer)
     : surface_points_pub_(surface_points_pub),
       marker_pub_(marker_pub),
       object_pub_(object_pub),
+      coord_pub_(coord_pub),
       recognizer_(recognizer) {}
 
     void SegmentTabletopScene(PointCloudC::Ptr cloud,
@@ -130,15 +135,21 @@ namespace perception {
         shape_msgs::SolidPrimitive shape;
         geometry_msgs::Pose pose;
             
+      
+    
         pcl::PointCloud<pcl::PointXYZRGB> output;
-        FitBox(*segmented, model, output, shape, pose);
-                    geometry_msgs::Vector3 dimensions;
+         FitBox(*segmented, model, output, shape, pose);
+        geometry_msgs::Vector3 dimensions;
+          //GetAxisAlignedBoundingBox(segmented, &pose,&dimensions);
+                    
             dimensions.x = shape.dimensions[0];
             dimensions.y = shape.dimensions[1];
             dimensions.z = shape.dimensions[2];
+        ROS_INFO("POSE %f %f %f", (float)  pose.position.x,(float)  pose.position.y,(float) pose.position.z);
+        ROS_INFO("Dim %f %f %f", (float) dimensions.x,(float) dimensions.y,(float)dimensions.z);
 
         Object object;
-            object.name = "object";
+            object.name = "table";
             object.confidence = .5;
             object.cloud = segmented;
             object.pose = pose;
@@ -216,35 +227,68 @@ namespace perception {
             object_marker.color.a = 0.3;
             marker_pub_.publish(object_marker);
 
+            perception_msgs::ObjectCoordinates object_coords;
+            object_coords.object_name = object.name;
+            object_coords.pose = object.pose;
+            
+            geometry_msgs::Point point1;
+            geometry_msgs::Point point2;
+            geometry_msgs::Point point3;
+            geometry_msgs::Point point4;
+
+            point1.x = object.pose.position.x - object.dimensions.x/2;
+            point1.y = object.pose.position.y - object.dimensions.y/2;
+            point1.z = object.pose.position.z;
+
+            point2.x = object.pose.position.x - object.dimensions.x/2;
+            point2.y = object.pose.position.y + object.dimensions.y/2;
+            point2.z = object.pose.position.z;
+
+            point3.x = object.pose.position.x + object.dimensions.x/2;
+            point3.y = object.pose.position.y + object.dimensions.y/2;
+            point3.z = object.pose.position.z;
+
+            point4.x = object.pose.position.x + object.dimensions.x/2;
+            point4.y = object.pose.position.y - object.dimensions.y/2;
+            point4.z = object.pose.position.z;
+
+            object_coords.corners.push_back(point1);
+            object_coords.corners.push_back(point2);
+            object_coords.corners.push_back(point3);
+            object_coords.corners.push_back(point4);
+           
+            coord_pub_.publish(object_coords);
+
+
             // Recognize the object.
-            std::string name;
-            double confidence;
-            recognizer_.Recognize(object, &name, &confidence);
-            confidence = round(1000 * confidence) / 1000;
+            // std::string name;
+            // double confidence;
+            // recognizer_.Recognize(object, &name, &confidence);
+            // confidence = round(1000 * confidence) / 1000;
 
-            std::stringstream ss;
-            ss << name << " (" << confidence << ")";
+            // std::stringstream ss;
+            // ss << name << " (" << confidence << ")";
 
-            // ROS_INFO("Name: %s", name);
+            // // ROS_INFO("Name: %s", name);
 
-            // Publish the recognition result.
-            visualization_msgs::Marker name_marker;
-            name_marker.ns = "recognition";
-            name_marker.id = i;
-            name_marker.header.frame_id = "base_link";
-            name_marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
-            name_marker.pose.position = object.pose.position;
-            name_marker.pose.position.z += 0.1;
-            name_marker.pose.orientation.w = 1;
-            name_marker.scale.x = 0.025;
-            name_marker.scale.y = 0.025;
-            name_marker.scale.z = 0.025;
-            name_marker.color.r = 0;
-            name_marker.color.g = 0;
-            name_marker.color.b = 1.0;
-            name_marker.color.a = 1.0;
-            name_marker.text = ss.str();
-            marker_pub_.publish(name_marker);
+            // // Publish the recognition result.
+            // visualization_msgs::Marker name_marker;
+            // name_marker.ns = "recognition";
+            // name_marker.id = i;
+            // name_marker.header.frame_id = "base_link";
+            // name_marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+            // name_marker.pose.position = object.pose.position;
+            // name_marker.pose.position.z += 0.1;
+            // name_marker.pose.orientation.w = 1;
+            // name_marker.scale.x = 0.025;
+            // name_marker.scale.y = 0.025;
+            // name_marker.scale.z = 0.025;
+            // name_marker.color.r = 0;
+            // name_marker.color.g = 0;
+            // name_marker.color.b = 1.0;
+            // name_marker.color.a = 1.0;
+            // name_marker.text = ss.str();
+            // marker_pub_.publish(name_marker);
         }
     }
 

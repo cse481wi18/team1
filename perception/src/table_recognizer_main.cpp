@@ -8,6 +8,7 @@
 
 #include "perception/object_recognizer.h"
 #include "perception_msgs/ObjectFeatures.h"
+#include "perception_msgs/ObjectCoordinates.h"
 
 int main(int argc, char** argv) {
      // LAB 30
@@ -41,10 +42,13 @@ int main(int argc, char** argv) {
     perception::LoadData(data_dir, &dataset);
     perception::ObjectRecognizer recognizer(dataset);
 
-    perception::Segmenter segmenter(table_pub, marker_pub, object_pub, recognizer);
+    ros::Publisher coord_pub =
+        nh.advertise<perception_msgs::ObjectCoordinates>("object_coordinates", 1, true);
+
+    perception::Segmenter segmenter(table_pub, marker_pub, object_pub, coord_pub, recognizer);
 
     ros::Subscriber seg_sub =
-        nh.subscribe("cropped_cloud", 1, &perception::Segmenter::Callback, &segmenter);
+        nh.subscribe("cloud_in", 1, &perception::Segmenter::Callback, &segmenter);
     ros::spin();
     return 0;
 }

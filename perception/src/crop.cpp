@@ -26,13 +26,13 @@ void perception::Cropper::Callback(const sensor_msgs::PointCloud2& msg) {
     ros::param::param("crop_max_z", max_z, 1.5);
     Eigen::Vector4f min_pt(min_x, min_y, min_z, 1);
     Eigen::Vector4f max_pt(max_x, max_y, max_z, 1);
-  pcl::CropBox<PointC> crop;
-  crop.setInputCloud(cloud);
-  crop.setMin(min_pt);
-  crop.setMax(max_pt);
-  crop.filter(*cropped_cloud);
-  ROS_INFO("Cropped to %ld points", cropped_cloud->size());
-  sensor_msgs::PointCloud2 msg_out;
-  pcl::toROSMsg(*cropped_cloud, msg_out);
-  pub_.publish(msg_out);
+    pcl::CropBox<PointC> crop;
+    crop.setInputCloud(cloud);
+    crop.setMin(min_pt);
+    crop.setMax(max_pt);
+    crop.filter(*cropped_cloud);
+    ROS_INFO("Cropped to %ld points", cropped_cloud->size());
+    sensor_msgs::PointCloud2 msg_out;
+    pcl::toROSMsg(*cropped_cloud, msg_out);
+    pub_.publish(msg_out);
 }

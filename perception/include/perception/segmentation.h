@@ -53,12 +53,14 @@ class Segmenter {
   Segmenter(const ros::Publisher& surface_points_pub,
             const ros::Publisher& marker_pub,
             const ros::Publisher& object_pub,
+            const ros::Publisher& coord_pub,
             const ObjectRecognizer& object_recognizer);
 
  private:
   ros::Publisher surface_points_pub_;
   ros::Publisher marker_pub_;
   ros::Publisher object_pub_;
+  ros::Publisher coord_pub_;
   ObjectRecognizer recognizer_;
 };
 }  // namespace perception
