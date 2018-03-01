@@ -16,5 +16,8 @@ def callback(data):
 def listener():
     rospy.init_node('flask_listener_demo')
     wait_for_time()
-    rospy.Subscriber('web_interface', Int64, callback)
+    rospy.Subscriber('qr_code_interface', Int64, callback)
     rospy.spin()
+
+if __name__=='__main__':
+    listener()
