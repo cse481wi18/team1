@@ -22,19 +22,7 @@ class Navigator(object):
         # publish poses to move_base_simple/goal which will move the base (node nav_rviz does this)
         self._pub = rospy.Publisher('move_base_simple/goal', PoseStamped, queue_size = 10)
 
-  
-
-    def save(self, name):
-        # wait for first pose message to come in
-        print "Saving"
-        while self._last_pose == None: 
-            rospy.sleep(.5)
-
-        # map name to current pose, overwriting name if necessary
-        self._saved_poses[name] = self._last_pose 
-
-        self._pose_list_flag = True
-
+    # name = table number
     # returns -1 if name is not a saved pose
     def goto(self, name):
         if name not in self._saved_poses:
@@ -46,20 +34,6 @@ class Navigator(object):
         self._pub.publish(msg)
         return 0
     
-    def get_pose_from_name(self, name):
-        if name not in self._saved_poses: 
-            return None
-        else:
-            return self._saved_poses[name]
-
-    def change_pose(self, name, pose):
-        if name not in self._saved_poses:
-            return -1
-        self._saved_poses[name] = pose
-        return 0
-
-
-
     def pickle_dump(self, file):
         pickle.dump(self._saved_poses, open(file, 'wb'))
 
