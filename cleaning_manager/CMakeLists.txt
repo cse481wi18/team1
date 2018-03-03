@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(perception)
+project(cleaning_manager)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -8,13 +8,11 @@ project(perception)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  pcl_ros
-  rosbag       
-  roscpp    
+  geometry_msgs
+  roscpp
   rospy
-  sensor_msgs
-  tf
-  simple_grasping
+  std_msgs
+  perception
 )
 
 ## System dependencies are found with CMake's conventions
@@ -24,7 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-catkin_python_setup()
+# catkin_python_setup()
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -74,7 +72,8 @@ catkin_python_setup()
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
+#   geometry_msgs
+#   std_msgs
 # )
 
 ################################################
@@ -107,16 +106,9 @@ catkin_python_setup()
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES 
-    perception_crop
-    perception_downsampler
-    perception_segmentation
-    perception_fitbox
-    perception_feature_extraction
-    perception_object_recognizer
-    perception_table_segmenter
-#  CATKIN_DEPENDS roscpp rospy
+#  INCLUDE_DIRS include
+#  LIBRARIES cleaning_manager
+#  CATKIN_DEPENDS geometry_msgs roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
 
@@ -127,127 +119,39 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
- include
- ${catkin_INCLUDE_DIRS}
+# include
+  ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/perception.cpp
+#   src/${PROJECT_NAME}/cleaning_manager.cpp
 # )
-add_library(perception_crop src/crop.cpp)
-add_library(perception_downsampler src/downsampler.cpp)
-add_library(perception_segmentation src/segmentation.cpp)
-add_library(perception_fitbox src/box_fitter.cpp)
-add_library(perception_feature_extraction src/feature_extraction.cpp)
-add_library(perception_object_recognizer src/object_recognizer.cpp)
-add_library(perception_table_segmenter src/table_segmenter.cpp)
-
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(perception_crop ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(perception_downsampler ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(perception_segmentation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(perception_fitbox ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(perception_feature_extraction ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(perception_object_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(perception_table_segmenter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(perception_save_cloud_main src/save_cloud_main.cpp)
-add_executable(perception_extract_features_main src/extract_features_main.cpp)
-add_executable(perception_point_cloud_demo src/point_cloud_demo.cpp)
-add_executable(perception_table_recognizer_main src/table_recognizer_main.cpp)
-
+# add_executable(${PROJECT_NAME}_node src/cleaning_manager_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
-set_target_properties(perception_save_cloud_main PROPERTIES OUTPUT_NAME save_cloud PREFIX "")
-set_target_properties(perception_point_cloud_demo PROPERTIES OUTPUT_NAME point_cloud_demo PREFIX "")
-set_target_properties(perception_extract_features_main PROPERTIES OUTPUT_NAME extract_features PREFIX "")
-set_target_properties(perception_table_recognizer_main PROPERTIES OUTPUT_NAME table_recognizer_main PREFIX "")
-
+# set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(perception_save_cloud_main ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(perception_point_cloud_demo ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(perception_extract_features_main ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(perception_table_recognizer_main ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
+# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(perception_save_cloud_main
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(perception_point_cloud_demo
-  perception_crop
-  perception_downsampler
-  perception_segmentation
-  perception_fitbox
-  perception_feature_extraction
-  perception_object_recognizer
-  ${catkin_LIBRARIES}
-)
-
-target_link_libraries(perception_table_recognizer_main
-  perception_crop
-  perception_downsampler
-  perception_segmentation
-  perception_fitbox
-  perception_feature_extraction
-  perception_object_recognizer
-  ${catkin_LIBRARIES}
-)
-
-target_link_libraries(perception_extract_features_main
-  perception_crop
-  perception_downsampler
-  perception_segmentation
-  perception_fitbox
-  perception_feature_extraction
-  ${catkin_LIBRARIES}
-)
-
-target_link_libraries(perception_crop 
-  ${catkin_LIBRARIES}
-)
-
-target_link_libraries(perception_downsampler 
-  ${catkin_LIBRARIES}
-)
-
-target_link_libraries(perception_segmentation 
-  perception_feature_extraction
-  perception_object_recognizer
-  ${catkin_LIBRARIES}
-)
-
-target_link_libraries(perception_table_segmenter
-  perception_segmentation
-  ${catkin_LIBRARIES}
-)
-
-target_link_libraries(perception_fitbox
-  ${catkin_LIBRARIES}
-)
-
-target_link_libraries(perception_feature_extraction
-  ${catkin_LIBRARIES}
-)
-
-target_link_libraries(perception_object_recognizer 
-  ${catkin_LIBRARIES}
-)
-
+# target_link_libraries(${PROJECT_NAME}_node
+#   ${catkin_LIBRARIES}
+# )
 
 #############
 ## Install ##
@@ -289,7 +193,7 @@ target_link_libraries(perception_object_recognizer
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_perception.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_cleaning_manager.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

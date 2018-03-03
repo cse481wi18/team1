@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="cleaning_manager" type="cleaning_manager" name="cleaning_manager_setup" output="screen">
+  </node>
+</launch>
