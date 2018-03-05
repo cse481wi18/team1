@@ -2,7 +2,7 @@
 import rospy
 
 from std_msgs.msg import Int64
-import navigator import Navigator
+from navigator import Navigator
 import time
 
 
