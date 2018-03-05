@@ -102,10 +102,16 @@ if __name__ == "__main__":
             elif user_commands[0] == 'save':
                 if name is None:
                     print "Create a new action or load an existing one before saving new poses"
-                elif len(user_commands) != 2:
+                elif len(user_commands) == 1:
                     print "Save requires a frame reference, either base_link or fiducial id"
+                elif len(user_commands) == 2:
+                    result = program_manager.save_pose(user_commands[1], False)
+                    if result == -1:
+                        print "Unable to save current pose in reference frame " + user_commands[1]
+                    else:
+                        print "Saved current pose in reference frame " + user_commands[1] + " to action"
                 else:
-                    result = program_manager.save_pose(user_commands[1])
+                    result = program_manager.save_pose(user_commands[1], True)
                     if result == -1:
                         print "Unable to save current pose in reference frame " + user_commands[1]
                     else:

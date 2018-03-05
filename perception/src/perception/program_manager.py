@@ -10,7 +10,8 @@ from geometry_msgs.msg import PoseStamped, Pose, Point, Quaternion, Vector3
 import tf.transformations as tft
 import numpy as np
 from robot_controllers_msgs.msg import ControllerState, QueryControllerStatesGoal, QueryControllerStatesAction
-
+import moveit_commander
+import sys
 
 class ArTagReader(object):
     def __init__(self):
@@ -34,6 +35,16 @@ class ProgramManager(object):
         self._subscriber = rospy.Subscriber('/ar_pose_marker', AlvarMarkers, callback=self._reader.callback) # Subscribe to AR tag poses, use reader.callback
 
         self._controller_client = actionlib.SimpleActionClient('query_controller/controller_state', QueryControllerStatesAction)
+
+        moveit_commander.roscpp_initialize(sys.argv)
+        self._moveit_robot = moveit_commander.RobotCommander()
+        self._group = moveit_commander.MoveGroupCommander('arm')
+
+        def on_shutdown():
+            self._group.stop()
+            moveit_commander.roscpp_shutdown()
+
+        rospy.on_shutdown(on_shutdown)
 
     # Starts a program. Must be called before poses are saved.
     # name is the name of the program
@@ -68,7 +79,7 @@ class ProgramManager(object):
 
     # appends current pose, relative to frame, to the current program
     # returns 0 on success, -1 on error
-    def save_pose(self, frame):
+    def save_pose(self, frame, straight):
         if not self._in_progress:
             return -1 # program saving not in progress
         pose = Pose()
@@ -125,7 +136,7 @@ class ProgramManager(object):
             relative = frame
           
 
-        self._current_program.append((pose, relative))
+        self._current_program.append((pose, relative, straight))
         return 0
     
     # special case of save_pose
@@ -166,7 +177,7 @@ class ProgramManager(object):
         self._start_arm_controller()
         self._current_markers = self._reader.markers
 
-        for (pose, relative) in program:
+        for (pose, relative, straight) in program:
             if pose == 'open_gripper': 
                 self._gripper.open()
             elif pose == 'close_gripper':
@@ -190,9 +201,15 @@ class ProgramManager(object):
                     ps.pose = temp_pose
                     print ps
 
-                    error = self._arm.move_to_pose(ps)
-                    if error is not None:
-                        rospy.logerr(error)
+                    if not straight:
+                        error = self._arm.move_to_pose(ps)
+                        if error is not None:
+                            rospy.logerr(error)
+                    else:
+                        error = self._arm.straight_move_to_pose(self._group, ps, jump_threshold=3.0)
+                    
+                        if error is not None:
+                            rospy.logerr(error)
                 else: # relative to some tag
                     tag_w_pose = pose # temp_pose is tag_T_w, wrist relative to tag
                     
@@ -252,9 +269,14 @@ class ProgramManager(object):
                     ps.pose = temp_pose
 
                 
-                    error = self._arm.move_to_pose(ps)
-                    if error is not None:
-                        rospy.logerr(error)
+                    if not straight:
+                        error = self._arm.move_to_pose(ps)
+                        if error is not None:
+                            rospy.logerr(error)
+                    else:
+                        error = self._arm.straight_move_to_pose(self._group, ps, jump_threshold=3.0)
+                        if error is not None:
+                            rospy.logerr(error)
 
             rospy.sleep(1)
 

@@ -18,7 +18,7 @@ def wait_for_time():
 
 def main():
     moveit_commander.roscpp_initialize(sys.argv)
-    rospy.init_node('straight_gripper_motion_demo')
+    rospy.init_node('sweeper_arm_demo')
     wait_for_time()
     moveit_robot = moveit_commander.RobotCommander()
     group = moveit_commander.MoveGroupCommander('arm')
@@ -29,19 +29,21 @@ def main():
 
     rospy.on_shutdown(on_shutdown)
 
+    sweeper_arm = fetch_api.SweeperArm()
+
     # Set the torso height before running this demo.
     #torso = fetch_api.Torso()
     #torso.set_height(0.4)
 
-    pose1 = PoseStamped()
-    pose1.header.frame_id = 'base_link'
-    pose1.pose.position.x = 0.502
-    pose1.pose.position.y = -0.510
-    pose1.pose.position.z = 1.084
-    pose1.pose.orientation.x = -0.498
-    pose1.pose.orientation.y = 0.508
-    pose1.pose.orientation.z = 0.475
-    pose1.pose.orientation.w = 0.519
+    midPose = PoseStamped()
+    midPose.header.frame_id = 'base_link'
+    midPose.pose.position.x = 0.602
+    midPose.pose.position.y = 0
+    midPose.pose.position.z = 1.184
+    midPose.pose.orientation.x = -0.498
+    midPose.pose.orientation.y = 0.508
+    midPose.pose.orientation.z = 0.475
+    midPose.pose.orientation.w = 0.519
 
     pose2 = PoseStamped()
     pose2.header.frame_id = 'base_link'
@@ -53,11 +55,12 @@ def main():
     pose2.pose.orientation.z = -0.499
     pose2.pose.orientation.w = -0.494
 
-    gripper_poses = [pose1, pose2]
+    gripper_poses = [midPose, pose2]
 
     arm = fetch_api.Arm()
-    print("attempting pose1")
-    arm.move_to_pose(pose1)
+    '''  
+    print("attempting midPose")
+    arm.move_to_pose(midPose)
     print("attempting pose2")
     arm.move_to_pose(pose2)
     print("going to try straight arm motion")
@@ -67,6 +70,9 @@ def main():
             if error is not None:
                 rospy.logerr(error)
             rospy.sleep(0.25)
+    '''
+
+    arm.move_to_pose(midPose)
 
     moveit_commander.roscpp_shutdown()
 

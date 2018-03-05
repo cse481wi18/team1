@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 import rospy
-from perception import 
+
 from std_msgs.msg import Int64
 import navigator import Navigator
 import time
@@ -38,17 +38,19 @@ class CleaningManager(object):
 
     def start_cleaning_sequence(self):
         result = self._navigator.goto(self._requests.pop(0))
-            if result == 1:
+        if result == 1:
+            print "Navigating"
                 # raise torso
                 # START SWEEP SEQUENCE
-            else: 
+        else: 
+            print "Failed navigation"
                 # RETRY? 
-
-        
-
 
         if len(self._requests) > 0:
             start_cleaning_sequence()
+        else:
+            print "No more requests"
+            # return to station
 
 
 
@@ -56,7 +58,6 @@ def main():
     rospy.init_node('cleaning_manager')
     wait_for_time()
 
-    segmenter = segmenter(table_pub, marker_pub, object_pub, coord_pub)
     navigator = Navigator(15) # 15 second timeout for each pose
 
     manager = CleaningManager(segmenter)
