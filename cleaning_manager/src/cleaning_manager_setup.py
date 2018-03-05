@@ -39,6 +39,7 @@ class CleaningManager(object):
     def start_cleaning_sequence(self):
         result = self._navigator.goto(self._requests.pop(0))
             if result == 1:
+                # raise torso
                 # START SWEEP SEQUENCE
             else: 
                 # RETRY? 
