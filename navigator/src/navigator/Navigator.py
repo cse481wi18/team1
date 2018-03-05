@@ -45,6 +45,16 @@ class Navigator(object):
             return 1
         else:
             return 0
+
+    # pose1 and pose2 are type Pose
+    def distance(self, pose1, pose2): 
+        x1 = pose1.position.x
+        y1 = pose1.position.y 
+        x2 = pose2.position.x
+        y2 = pose2.position.y
+        sq1 = (x1-x2)*(x1-x2)
+        sq2 = (y1-y2)*(y1-y2)
+        return math.sqrt(sq1+sq2)
     
 
     def pickle_dump(self, file):
@@ -56,6 +66,7 @@ class Navigator(object):
             self._saved_poses = pickle.load(open(file, 'rb'))
         except Exception as e:
             self._saved_poses = {}
+
 
 
         
