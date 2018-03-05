@@ -1,1 +1,1 @@
-from .navigator import navigator
+from .Navigator import Navigator

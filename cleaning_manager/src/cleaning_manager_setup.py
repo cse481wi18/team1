@@ -13,10 +13,9 @@ def wait_for_time():
         pass
 
 class CleaningManager(object):
-    def __init__(self, segmenter, navigator):
+    def __init__(self, navigator):
         self._requests = []
         self._cleaning = False
-        self._segmenter = segmenter
         self._navigator = navigator
     
 
@@ -26,17 +25,20 @@ class CleaningManager(object):
         if not self._cleaning:
             self._cleaning = True
             print "starting to clean"
-            self._start_cleaning_sequence()
+            self.start_cleaning_sequence()
 
         else:
             print "Already cleaning"
+        return 'OK'
 
 
     def start(self):
+        print "Starting robot"
         rospy.Subscriber('qr_code_interface', Int64, callback=self.qr_callback)
     
 
     def start_cleaning_sequence(self):
+        result = 1
         result = self._navigator.goto(self._requests.pop(0))
         if result == 1:
             print "Navigating"
@@ -45,9 +47,8 @@ class CleaningManager(object):
         else: 
             print "Failed navigation"
                 # RETRY? 
-
         if len(self._requests) > 0:
-            start_cleaning_sequence()
+            self.start_cleaning_sequence()
         else:
             print "No more requests"
             # return to station
@@ -58,9 +59,12 @@ def main():
     rospy.init_node('cleaning_manager')
     wait_for_time()
 
+    print "Starting"
+
     navigator = Navigator(15) # 15 second timeout for each pose
 
-    manager = CleaningManager(segmenter)
+    manager = CleaningManager(navigator)
+    print "Really starting"
     manager.start()
 
     rospy.spin()

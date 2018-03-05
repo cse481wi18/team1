@@ -7,8 +7,8 @@ from geometry_msgs.msg import PoseWithCovarianceStamped, PoseWithCovariance, Pos
 class Navigator(object):     
 
     def _current_pose_callback(self, data):
-    # data is of type PoseWithCovarianceStamped, which has a PoseWithCovariance, which has a Pose
-    self._last_pose = data.pose.pose # type Pose, which has Point and Quaternion
+        # data is of type PoseWithCovarianceStamped, which has a PoseWithCovariance, which has a Pose
+        self._last_pose = data.pose.pose # type Pose, which has Point and Quaternion
     
 
     def __init__(self, timeout):
@@ -57,11 +57,11 @@ class Navigator(object):
         return math.sqrt(sq1+sq2)
     
 
-    def pickle_dump(self, file):
+    def _pickle_dump(self, file):
         pickle.dump(self._saved_poses, open(file, 'wb'))
 
 
-    def pickle_load(self, file):
+    def _pickle_load(self, file):
         try:
             self._saved_poses = pickle.load(open(file, 'rb'))
         except Exception as e:
