@@ -40,10 +40,10 @@ class Navigator(object):
 
         start_time = rospy.get_rostime()
 
-        while self._distance(self._last_pose, msg.pose) > 0.1 and (rospy.get_rostime() - start_time < self._timeout):
+        while self.distance(self._last_pose, msg.pose) > 0.1 and (rospy.get_rostime() - start_time < self._timeout):
             rospy.sleep(0.5) # sleep for 0.5 seconds
         
-        if self._distance(self._last_pose, msg.pose) < 0.1:
+        if self.distance(self._last_pose, msg.pose) < 0.1:
             return 1
         else:
             return 0
