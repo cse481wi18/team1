@@ -10,4 +10,5 @@ def test(table):
     rospy.init_node('flask_web_server')
     pub.publish(Int64(table))
     rospy.loginfo('published table number: ' + str(table))
+    return 'OK'
                

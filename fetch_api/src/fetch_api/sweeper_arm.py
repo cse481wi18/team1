@@ -19,10 +19,12 @@ class SweeperArm(object):
 
         self._arm = Arm()
 
-    def hand_broom_pass(height, coords):
+    # Coords is a size 4 list of PoseStamps.pose.position
+    def hand_broom_pass(height_from_table, coords):
+        
         pass
 
-    def swiffer_broom_pass(height, coords):
+    def swiffer_broom_pass(height_from_table, coords):
         pass
 
     def left_right_pass(orientation, height, coords, stroke_width):
