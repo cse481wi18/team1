@@ -62,8 +62,8 @@ class Navigator(object):
 
 
     def _pickle_load(self, file):
-        try:
-            self._saved_poses = pickle.load(open(file, 'rb'))
+      try:
+            self._saved_poses = pickle.load(open("poses.p", 'rb'))
         except Exception as e:
             self._saved_poses = {}
 
