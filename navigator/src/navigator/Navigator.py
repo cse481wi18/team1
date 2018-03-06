@@ -3,6 +3,7 @@
 import rospy 
 import pickle
 from geometry_msgs.msg import PoseWithCovarianceStamped, PoseWithCovariance, PoseStamped, Pose, Point, Quaternion    
+import math
 
 class Navigator(object):     
 
