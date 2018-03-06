@@ -25,7 +25,7 @@ class Navigator(object):
         # publish poses to move_base_simple/goal which will move the base (node nav_rviz does this)
         self._pub = rospy.Publisher('move_base_simple/goal', PoseStamped, queue_size = 10)
 
-        self._timeout = ros.Duration(timeout)
+        self._timeout = rospy.Duration(timeout)
 
     # name = table number
     # returns -1 if name is not a saved pose, 1 if successfully moved to pose, 0 if couldn't move to pose
