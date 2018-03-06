@@ -56,6 +56,7 @@ class CleaningManager(object):
         if len(self._requests) > 0:
             self.start_cleaning_sequence()
         else:
+            self._cleaning = False
             print "No more requests"
             # return to station
 
