@@ -14,7 +14,7 @@ class Navigator(object):
     def __init__(self, timeout):
 
         # map from table number to table pose
-        self._saved_poses = self._pickle_load("poses.p")
+        self._saved_poses = self._pickle_load("/home/team1/catkin_ws/src/cse481c/poses.p")
 
         self._last_pose = None
         # acml_pose topic gives current pose
