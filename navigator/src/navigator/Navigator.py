@@ -15,7 +15,7 @@ class Navigator(object):
         print "initing"
 
         # map from table number to table pose
-        self._pickle_load("/home/team1/catkin_ws/src/cse481wi18/navigator/tables.p")
+        self._pickle_load("tables.p")
 
         self._last_pose = None
         # acml_pose topic gives current pose
