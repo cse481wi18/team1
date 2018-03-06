@@ -43,7 +43,9 @@ class CleaningManager(object):
     
 
     def start_cleaning_sequence(self):
-        result = self._navigator.goto(self._requests.pop(0))
+        table = str(self._requests.pop(0))
+        print "starting table " + table
+        result = self._navigator.goto(table)
         if result == 1:
             print "Navigating"
                 # raise torso

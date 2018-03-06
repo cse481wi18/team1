@@ -29,8 +29,8 @@ class Navigator(object):
     # name = table number
     # returns -1 if name is not a saved pose, 1 if successfully moved to pose, 0 if couldn't move to pose
     def goto(self, name):
-        print self._saved_poses
         if name not in self._saved_poses:
+            print "Pose " + str(name) + " not in tables"
             return -1
 
         msg = PoseStamped()
