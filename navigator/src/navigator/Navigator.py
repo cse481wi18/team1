@@ -12,9 +12,10 @@ class Navigator(object):
     
 
     def __init__(self, timeout):
+        print "initing"
 
         # map from table number to table pose
-        self._saved_poses = self._pickle_load("/home/team1/catkin_ws/src/cse481c/poses.p")
+        self._pickle_load("/home/team1/catkin_ws/src/cse481wi18/navigator/tables.p")
 
         self._last_pose = None
         # acml_pose topic gives current pose
@@ -28,6 +29,7 @@ class Navigator(object):
     # name = table number
     # returns -1 if name is not a saved pose, 1 if successfully moved to pose, 0 if couldn't move to pose
     def goto(self, name):
+        print self._saved_poses
         if name not in self._saved_poses:
             return -1
 
@@ -63,9 +65,11 @@ class Navigator(object):
 
     def _pickle_load(self, file):
         try:
-            self._saved_poses = pickle.load(open("poses.p", 'rb'))
+            self._saved_poses = pickle.load(open(file, 'rb'))
         except Exception as e:
+            print "Failed to load table positions!"
             self._saved_poses = {}
+        print self._saved_poses
 
 
 
