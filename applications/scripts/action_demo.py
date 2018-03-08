@@ -4,7 +4,7 @@ import fetch_api
 import rospy
 
 import sys, select, termios, tty
-# /imrt perception
+import perception
 
 # from perception import ProgramManager
 
