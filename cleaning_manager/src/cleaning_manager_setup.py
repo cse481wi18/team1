@@ -27,7 +27,7 @@ class CleaningManager(object):
         self._bucket_grab = None
         self._load_files()
 
-        self._program_manager = ProgramManager()
+        self._program_manager = ProgramManager()git ad
     
 
     def qr_callback(self, data):
@@ -64,8 +64,10 @@ class CleaningManager(object):
                 self._program_manager.run_program("torso_bucket.p")
                 self._program_manager.run_program("bucket_release.p")
                 self._program_manager.run_program("attachment_grab.p")
+                # SET TORSO TO 0.0
                 self._program_manager.run_program("cleaning_sequence_1.p")
                 self._program_manager.run_program("cleaning_sequence_2.p")
+                # SET TORSO TO 0.0
                 self._program_manager.run_program("attachment_release.p")
                 self._program_manager.run_program("bucket_grab.p")
         else: 
