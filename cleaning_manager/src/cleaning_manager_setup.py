@@ -18,6 +18,16 @@ class CleaningManager(object):
         self._cleaning = False
         self._navigator = navigator
         self._table = None
+        
+        self._bucket_release_sequence = None
+        self._attachment_grab_sequence = None
+        self._cleaning_sequence_1 = None
+        self._cleaning_sequence_2 = None 
+        self._attachment_release_sequence = None 
+        self._bucket_grab = None
+        self._load_files()
+
+        self._program_manager = ProgramManager()
     
 
     def qr_callback(self, data):
@@ -45,20 +55,33 @@ class CleaningManager(object):
     def start_cleaning_sequence(self):
         table = str(self._requests.pop(0))
         print "starting table " + table
+
+        self._program_manager.run_program("torso_nav.p")
         result = self._navigator.goto(table)
+
         if result == 1:
             print "Navigating"
-                # raise torso
-                # START SWEEP SEQUENCE
+                self._program_manager.run_program("torso_bucket.p")
+                self._program_manager.run_program("bucket_release.p")
+                self._program_manager.run_program("attachment_grab.p")
+                self._program_manager.run_program("cleaning_sequence_1.p")
+                self._program_manager.run_program("cleaning_sequence_2.p")
+                self._program_manager.run_program("attachment_release.p")
+                self._program_manager.run_program("bucket_grab.p")
         else: 
             print "Failed navigation"
                 # RETRY? 
+
+
         if len(self._requests) > 0:
             self.start_cleaning_sequence()
         else:
             self._cleaning = False
             print "No more requests"
             # return to station
+
+
+       
 
 def main():
     rospy.init_node('cleaning_manager')

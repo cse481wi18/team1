@@ -21,7 +21,7 @@ def main():
     rospy.sleep(0.5)
     names = fetch_api.ArmJoints.names()
     arvals = reader.get_joints(names)
-    for k, v in zip(names, arm_vals):
+    for k, v in zip(names, arvals):
         print '{}\t{}'.format(k, v)                
                       
 if __name__ == '__main__':

@@ -28,6 +28,7 @@ class ProgramManager(object):
 
         self._arm = fetch_api.Arm()
         self._gripper = fetch_api.Gripper()
+        self._torso = fetch_api.Torso()
         self._reader = ArTagReader()
         # while saving a program, don't update the position of the markers even if they change in real life 
         # this is so we can do things like move markers side to side
@@ -144,7 +145,7 @@ class ProgramManager(object):
         if not self._in_progress:
             return -1 # program saving not in progress
         
-        self._current_program.append(('open_gripper', 'base_link'))
+        self._current_program.append(('open_gripper', 'base_link', 'blah'))
 
         return 0
     
@@ -153,7 +154,13 @@ class ProgramManager(object):
         if not self._in_progress:
             return -1 # program saving not in progress
         
-        self._current_program.append(('close_gripper', 'base_link'))
+        self._current_program.append(('close_gripper', 'base_link', 'blah'))
+        return 0
+
+    def set_torso(self, height):
+        if not self._in_progress:
+            return -1
+        self._current_program.append(('torso', height, 'blah'))
         return 0
 
     
@@ -182,12 +189,13 @@ class ProgramManager(object):
                 self._gripper.open()
             elif pose == 'close_gripper':
                 self._gripper.close()
+            elif pose == 'torso':
+                print "Raising torso"
+                self._torso.set_height(float(relative))
             else: 
                 ps = PoseStamped()
                 ps.header.frame_id = 'base_link'
                 # need to create new pose and explicitly assign fields since pickle didn't store x/y/z field names
-     
-                
         
                 if relative == 'base_link':
                     temp_pose = Pose()

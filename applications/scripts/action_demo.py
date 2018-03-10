@@ -21,11 +21,12 @@ Commands:
   end: finish editing the current action and save the action
   delete: delete the current action and all poses in it
   tags: get the ids of all markers currently detected
+  torso: set the torso to the give height
   help: Show this list of commands
   quit: end this program
 """
 
-commands = {'list', 'save', 'create', 'end', 'delete', 'open', 'close', 'load', 'run', 'help', 'quit', 'tags'}
+commands = {'list', 'torso', 'save', 'create', 'end', 'delete', 'open', 'close', 'load', 'run', 'help', 'quit', 'tags'}
 
 
 def getLine():
@@ -138,6 +139,15 @@ if __name__ == "__main__":
                     else:
                         print "Deleted current action"
                         name = None
+            elif user_commands[0] == 'torso':
+                if name is None:
+                    print "Create a new action or load an existing one before editing the robot's pose"
+                else:
+                    result = program_manager.set_torso(user_commands[1])
+                    if result == -1:
+                        print "Unable to set torso"
+                    else:
+                        print "Set torso"
             elif user_commands[0] == 'end':           
                 if name is None:
                     print "No action to end"
