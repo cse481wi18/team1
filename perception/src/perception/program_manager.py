@@ -286,7 +286,7 @@ class ProgramManager(object):
                         if error is not None:
                             rospy.logerr(error)
 
-            rospy.sleep(1)
+            rospy.sleep(.7)
 
         return 0
 

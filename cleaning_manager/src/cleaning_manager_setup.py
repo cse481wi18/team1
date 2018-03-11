@@ -18,6 +18,7 @@ class CleaningManager(object):
         self._cleaning = False
         self._navigator = navigator
         self._table = None
+        self._home = "home"
         
         self._bucket_release_sequence = None
         self._attachment_grab_sequence = None
@@ -27,7 +28,7 @@ class CleaningManager(object):
         self._bucket_grab = None
         self._load_files()
 
-        self._program_manager = ProgramManager()git ad
+        self._program_manager = ProgramManager()
     
 
     def qr_callback(self, data):
@@ -80,6 +81,7 @@ class CleaningManager(object):
         else:
             self._cleaning = False
             print "No more requests"
+            result = self._navigator.goto(self._home)
             # return to station
 
 
