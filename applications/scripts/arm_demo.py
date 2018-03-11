@@ -16,20 +16,23 @@ def main():
     rospy.init_node('arm_demo')
     wait_for_time()
     argv = rospy.myargv()
-    DISCO_POSES = [[1.5, -0.6, 3.0, 1.0, 3.0, 1.0, 3.0],
-                   [0.8, 0.75, 0.0, -2.0, 0.0, 2.0, 0.0],
-                   [-0.8, 0.0, 0.0, 2.0, 0.0, -2.0, 0.0],
-                   [-1.5, 1.1, -3.0, -0.5, -3.0, -1.0, -3.0],
-                   [-0.8, 0.0, 0.0, 2.0, 0.0, -2.0, 0.0],
-                   [0.8, 0.75, 0.0, -2.0, 0.0, 2.0, 0.0],
-                   [1.5, -0.6, 3.0, 1.0, 3.0, 1.0, 3.0]]
+    # DISCO_POSES = [[1.5, -0.6, 3.0, 1.0, 3.0, 1.0, 3.0],
+    #                [0.8, 0.75, 0.0, -2.0, 0.0, 2.0, 0.0],
+    #                [-0.8, 0.0, 0.0, 2.0, 0.0, -2.0, 0.0],
+    #                [-1.5, 1.1, -3.0, -0.5, -3.0, -1.0, -3.0],
+    #                [-0.8, 0.0, 0.0, 2.0, 0.0, -2.0, 0.0],
+    #                [0.8, 0.75, 0.0, -2.0, 0.0, 2.0, 0.0],
+    #                [1.5, -0.6, 3.0, 1.0, 3.0, 1.0, 3.0]]
 
 
+    # arm = fetch_api.Arm()
+    # for vals in DISCO_POSES:
+    #     arm.move_to_joints(fetch_api.ArmJoints.from_list(vals))
+    #     time.sleep(1)
+
+    vals = []
     arm = fetch_api.Arm()
-    for vals in DISCO_POSES:
-        arm.move_to_joints(fetch_api.ArmJoints.from_list(vals))
-        time.sleep(1)
-
+    arm.move_to_joints(fetch_api.ArmJoints.from_list(vals))
 
 if __name__ == '__main__':
     main()
