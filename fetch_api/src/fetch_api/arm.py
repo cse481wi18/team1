@@ -133,7 +133,7 @@ class Arm(object):
             return None
         else:
             return error_code
-    def straight_move_to_pose(self, group, pose_stamped, ee_step=0.025, jump_threshold=2.0, avoid_collisions=True):
+    def straight_move_to_pose(self, group, pose_stamped, ee_step=0.025, jump_threshold=3.5, avoid_collisions=True):
         """Moves the end-effector to a pose in a straight line.
         Args:
           group: moveit_commander.MoveGroupCommander. The planning group for
