@@ -30,7 +30,7 @@ def main():
     #     arm.move_to_joints(fetch_api.ArmJoints.from_list(vals))
     #     time.sleep(1)
 
-    vals = []
+    vals = [1.02551778819, -0.580883597877, -1.8110081029,1.83004611882, -0.71210059167, 0.803167709198, -1.46482672643]
     arm = fetch_api.Arm()
     arm.move_to_joints(fetch_api.ArmJoints.from_list(vals))
 
