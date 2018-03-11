@@ -214,7 +214,7 @@ class ProgramManager(object):
                         if error is not None:
                             rospy.logerr(error)
                     else:
-                        error = self._arm.straight_move_to_pose(self._group, ps, jump_threshold=3.0)
+                        error = self._arm.straight_move_to_pose(self._group, ps, jump_threshold=4.0)
                     
                         if error is not None:
                             rospy.logerr(error)
@@ -282,7 +282,7 @@ class ProgramManager(object):
                         if error is not None:
                             rospy.logerr(error)
                     else:
-                        error = self._arm.straight_move_to_pose(self._group, ps, jump_threshold=3.0)
+                        error = self._arm.straight_move_to_pose(self._group, ps, jump_threshold=4.0)
                         if error is not None:
                             rospy.logerr(error)
 
