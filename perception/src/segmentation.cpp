@@ -5,6 +5,7 @@
 #include "pcl/point_types.h"
 #include "pcl_conversions/pcl_conversions.h"
 #include "ros/ros.h"
+#include "sensor_msgs/point_cloud_conversion.h"
 #include "sensor_msgs/PointCloud2.h"
 #include "pcl/common/angles.h"
 #include "pcl/sample_consensus/method_types.h"
@@ -19,6 +20,8 @@
 #include "perception/feature_extraction.h"
 #include "perception_msgs/ObjectCoordinates.h"
 #include "geometry_msgs/Point.h"
+#include "pcl_ros/transforms.h"
+#include "tf/transform_listener.h"
 
 
 typedef pcl::PointXYZRGB PointC;
@@ -110,7 +113,8 @@ namespace perception {
       marker_pub_(marker_pub),
       object_pub_(object_pub),
       coord_pub_(coord_pub),
-      recognizer_(recognizer) {}
+      recognizer_(recognizer),
+      tf_listener_() {}
 
     void SegmentTabletopScene(PointCloudC::Ptr cloud,
                           std::vector<Object>* objects, const ros::Publisher& surface_points_pub_) {
@@ -202,13 +206,17 @@ namespace perception {
     }
 
     void Segmenter::Callback(const sensor_msgs::PointCloud2& msg) {
-        PointCloudC::Ptr cloud_unfiltered(new PointCloudC());
-        pcl::fromROSMsg(msg, *cloud_unfiltered);
+        // PointCloudC::Ptr cloud_unfiltered(new PointCloudC());
+        // pcl::fromROSMsg(msg, *cloud_unfiltered);
+
+                                                     
+       
+        PointCloudC::Ptr cloud_w_nan(new PointCloudC());
+        pcl::fromROSMsg(msg, *cloud_w_nan);
         PointCloudC::Ptr cloud(new PointCloudC());
         std::vector<int> index;
-        pcl::removeNaNFromPointCloud(*cloud_unfiltered, *cloud, index);
-
-
+         pcl::removeNaNFromPointCloud(*cloud_w_nan, *cloud, index);
+       
         std::vector<Object> objects;
         SegmentTabletopScene(cloud, &objects, surface_points_pub_);
 

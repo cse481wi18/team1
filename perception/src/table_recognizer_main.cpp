@@ -20,14 +20,6 @@ int main(int argc, char** argv) {
     ros::Subscriber sub =
         nh.subscribe("cloud_in", 1, &perception::Cropper::Callback, &cropper);
 
-
-    ros::Publisher down_pub =
-        nh.advertise<sensor_msgs::PointCloud2>("downsampled_cloud", 1, true);
-        perception::Downsampler downsampler(down_pub);
-
-    ros::Subscriber down_sub =
-        nh.subscribe("cropped_cloud", 1, &perception::Downsampler::Callback, &downsampler);
-
     // LAB 31
     ros::Publisher table_pub =
         nh.advertise<sensor_msgs::PointCloud2>("table_cloud", 1, true);

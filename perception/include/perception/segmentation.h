@@ -10,6 +10,7 @@
 #include "pcl/ModelCoefficients.h"
 #include "perception/box_fitter.h"
 #include "perception/object_recognizer.h"
+#include "tf/transform_listener.h"
 
 namespace perception {
 // Finds the largest horizontal surface in the given point cloud.
@@ -62,5 +63,6 @@ class Segmenter {
   ros::Publisher object_pub_;
   ros::Publisher coord_pub_;
   ObjectRecognizer recognizer_;
+  tf::TransformListener tf_listener_; 
 };
 }  // namespace perception
