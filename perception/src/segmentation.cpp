@@ -34,7 +34,7 @@ namespace perception {
         seg.setModelType(pcl::SACMODEL_PARALLEL_PLANE);
         seg.setMethodType(pcl::SAC_RANSAC);
         // Set the distance to the plane for a point to be an inlier.
-        seg.setDistanceThreshold(.0001);
+        seg.setDistanceThreshold(.01);
         seg.setInputCloud(cloud);
 
         // Make sure that the plane is perpendicular to Z-axis, 10 degree tolerance.
@@ -191,7 +191,7 @@ namespace perception {
            // pcl::PointCloud<pcl::PointXYZRGB>::Ptr output_ptr(*output);
 
             Object object;
-            object.name = "object";
+            object.name = "bucket";
             object.confidence = .5;
             object.cloud = object_cloud;
             object.pose = pose;

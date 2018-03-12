@@ -12,6 +12,7 @@ import numpy as np
 from robot_controllers_msgs.msg import ControllerState, QueryControllerStatesGoal, QueryControllerStatesAction
 import moveit_commander
 import sys
+from perception_msgs.msg import ObjectCoordinates
 
 class ArTagReader(object):
     def __init__(self):
@@ -30,10 +31,18 @@ class ProgramManager(object):
         self._gripper = fetch_api.Gripper()
         self._torso = fetch_api.Torso()
         self._reader = ArTagReader()
+
         # while saving a program, don't update the position of the markers even if they change in real life 
         # this is so we can do things like move markers side to side
         self._current_markers = []
+
+        # current table and bucket pose, if detected
+        self._table_pose = None # Pose type
+        self._bucket_pose = None
+
+
         self._subscriber = rospy.Subscriber('/ar_pose_marker', AlvarMarkers, callback=self._reader.callback) # Subscribe to AR tag poses, use reader.callback
+        self._table_subscriber = rospy.Subscriber('/object_coordinates', ObjectCoordinates, callback=self._object_callback)
 
         self._controller_client = actionlib.SimpleActionClient('query_controller/controller_state', QueryControllerStatesAction)
 
@@ -46,6 +55,12 @@ class ProgramManager(object):
             moveit_commander.roscpp_shutdown()
 
         rospy.on_shutdown(on_shutdown)
+
+    def _object_callback(self, msg):
+        if msg.name == 'table':
+            self._table_pose = msg.pose
+        elif msg.name == 'bucket':
+            self._bucket_pose = msg.pose
 
     # Starts a program. Must be called before poses are saved.
     # name is the name of the program
@@ -90,6 +105,43 @@ class ProgramManager(object):
             pose.position = position
             pose.orientation = quaternion
             relative = 'base_link' 
+        elif frame == 'table':
+            # Get transfrom matrix from base to wrist 
+            (pos_b, quat_b) = self._listener.lookupTransform('base_link', 'wrist_roll_link', rospy.Time(0))
+    
+            b_w_matrix = tft.quaternion_matrix(quat_b)
+            # set 4th col of transformation matrix to be translation (aka position) vector
+            pos_b.append(1)
+            b_w_matrix[:, 3] = pos_b 
+
+            # table has a pose relative to base frame, aka b_T_tag. We need tag_T_b.
+            #Get transfromation matrix from table to base and invert it
+            t_pos = self._table_pose.position
+ 
+            # original table rotation in base link frame
+            t_q = self._table_pose.orientation
+        
+            # b_t_matrix is b_T_tag
+            b_t_matrix = tft.quaternion_matrix([t_q.x, t_q.y, t_q.z, t_q.w]) 
+            b_t_matrix[:, 3] = (t_pos.x, t_pos.y, t_pos.z, 1) 
+
+            # t_b_matrix is table_T_b
+            t_b_matrix= np.linalg.inv(b_t_matrix)
+
+            # multiply t_b by b_w to get tag_T_w
+            t_w_matrix = np.dot(t_b_matrix, b_w_matrix)
+        
+            pose.position = Point(t_w_matrix [0, 3], t_w_matrix [1, 3], t_w_matrix [2, 3])
+            temp = tft.quaternion_from_matrix(t_w_matrix)
+            pose.orientation = Quaternion(temp[0], temp[1], temp[2], temp[3])
+
+            print pose
+
+            # save orientation relative to base even though position relative to table, since table orientation is arbitrary
+            # so we store the position of the wrist relative to the table, but the orientation of the wrist relative to the base
+            # pose.orientation = Quaternion(quat_b[0], quat_b[1], quat_b[2], quat_b[3])
+
+            relative = 'table'
         else : # some tag
             current_marker = None
             # don't use real time markers, use markers saved at the start of the program
@@ -136,7 +188,6 @@ class ProgramManager(object):
             # pose.orientation = Quaternion(quat_b[0], quat_b[1], quat_b[2], quat_b[3])
             relative = frame
           
-
         self._current_program.append((pose, relative, straight))
         return 0
     
@@ -209,15 +260,47 @@ class ProgramManager(object):
                     ps.pose = temp_pose
                     print ps
 
-                    if not straight:
-                        error = self._arm.move_to_pose(ps)
-                        if error is not None:
-                            rospy.logerr(error)
-                    else:
-                        error = self._arm.straight_move_to_pose(self._group, ps, jump_threshold=4.0)
-                    
-                        if error is not None:
-                            rospy.logerr(error)
+                elif relative == 'table':
+                    table_w_pose = pose
+
+                    final_wrist_orientation_in_base_frame = pose.orientation
+                    # Get transfrom matrix from table to wrist 
+                    (table_w_pos, table_w_quat) = table_w_pose.position, table_w_pose.orientation
+                    t_w_matrix = tft.quaternion_matrix([table_w_quat.x, table_w_quat.y, table_w_quat.z, table_w_quat.w])
+                   
+                    # set 4th col of transformation matrix to be translation (aka position) vector
+
+                    t_w_matrix[:, 3] = (table_w_pos.x, table_w_pos.y, table_w_pos.z, 1) 
+
+                    # t_w_matrix is table_T_w
+
+                    # find b_T_table
+
+                    #Get transfromation matrix from base to table
+                    t_pos = self._table_pose.position
+
+
+                    # original rotation in base link frame
+
+                    t_q = self._table_pose.orientation
+                                    
+
+
+                    b_t_matrix = tft.quaternion_matrix([t_q.x, t_q.y, t_q.z, t_q.w]) 
+                    b_t_matrix[:, 3] = (t_pos.x, t_pos.y, t_pos.z, 1) 
+
+                    # b_t_matrix is b_T_table
+
+                    # multiply t_w by b_t       
+                    b_w_matrix = np.dot(b_t_matrix, t_w_matrix)
+
+                    temp_pose = Pose()
+                    temp_pose.position = Point(b_w_matrix [0, 3], b_w_matrix [1, 3], b_w_matrix [2, 3])
+      
+                    temp = tft.quaternion_from_matrix(b_w_matrix)
+                    temp_pose.orientation = Quaternion(temp[0], temp[1], temp[2], temp[3])
+
+                    ps.pose = temp_pose
                 else: # relative to some tag
                     tag_w_pose = pose # temp_pose is tag_T_w, wrist relative to tag
                     
@@ -277,14 +360,14 @@ class ProgramManager(object):
                     ps.pose = temp_pose
 
                 
-                    if not straight:
-                        error = self._arm.move_to_pose(ps)
-                        if error is not None:
-                            rospy.logerr(error)
-                    else:
-                        error = self._arm.straight_move_to_pose(self._group, ps, jump_threshold=4.0)
-                        if error is not None:
-                            rospy.logerr(error)
+                if not straight:
+                    error = self._arm.move_to_pose(ps)
+                    if error is not None:
+                        rospy.logerr(error)
+                else:
+                    error = self._arm.straight_move_to_pose(self._group, ps, jump_threshold=4.0)
+                    if error is not None:
+                        rospy.logerr(error)
 
             rospy.sleep(.7)
 
