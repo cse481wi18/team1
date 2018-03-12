@@ -40,9 +40,9 @@ void perception::Cropper::Callback(const sensor_msgs::PointCloud2& msg) {
 
   ros::NodeHandle nh;
   ros::Publisher pub = nh.advertise<sensor_msgs::PointCloud2>("test", 1, true);
-  while (pub.getNumSubscribers() == 0) {
-  ros::spinOnce();
-}
+  // while (pub.getNumSubscribers() == 0) {
+    //ros::spinOnce();
+  //}
   pub.publish(cloud_out);
 
   PointCloudC::Ptr cropped_cloud(new PointCloudC());

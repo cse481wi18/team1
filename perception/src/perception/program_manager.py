@@ -57,9 +57,9 @@ class ProgramManager(object):
         rospy.on_shutdown(on_shutdown)
 
     def _object_callback(self, msg):
-        if msg.name == 'table':
+        if msg.object_name == 'table':
             self._table_pose = msg.pose
-        elif msg.name == 'bucket':
+        elif msg.object_name == 'bucket':
             self._bucket_pose = msg.pose
 
     # Starts a program. Must be called before poses are saved.
