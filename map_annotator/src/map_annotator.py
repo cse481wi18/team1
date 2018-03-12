@@ -88,7 +88,7 @@ tes and provides the latest joint angles.
         return 0
 
     def pickle_dump(self):
-        pickle.dump(self._saved_poses, open("poses.p", 'wb'))
+        pickle.dump(self._saved_poses, open("/home/team1/map_poses/demo_poses.p", 'wb'))
 
     def get_all_poses(self):
         return self._saved_poses
@@ -96,7 +96,7 @@ tes and provides the latest joint angles.
 
     def pickle_load(self):
         try:
-            self._saved_poses = pickle.load(open("poses.p", 'rb'))
+            self._saved_poses = pickle.load(open("/home/team1/map_poses/demo_poses.p", 'rb'))
         except Exception as e:
             self._saved_poses = {}
     
