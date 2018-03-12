@@ -117,6 +117,9 @@ class ProgramManager(object):
             # table has a pose relative to base frame, aka b_T_tag. We need tag_T_b.
             #Get transfromation matrix from table to base and invert it
             t_pos = self._table_pose.position
+            print "--------Pose of table relative to base link-------"
+            print self._table_pose
+
  
             # original table rotation in base link frame
             t_q = self._table_pose.orientation
@@ -134,7 +137,7 @@ class ProgramManager(object):
             pose.position = Point(t_w_matrix [0, 3], t_w_matrix [1, 3], t_w_matrix [2, 3])
             temp = tft.quaternion_from_matrix(t_w_matrix)
             pose.orientation = Quaternion(temp[0], temp[1], temp[2], temp[3])
-
+            print "--------Pose of wrist relative to table-------"
             print pose
 
             # save orientation relative to base even though position relative to table, since table orientation is arbitrary
@@ -262,6 +265,8 @@ class ProgramManager(object):
 
                 elif relative == 'table':
                     table_w_pose = pose
+                    print "-------Pose of wrist relative to the Table--------"
+                    print pose
 
                     final_wrist_orientation_in_base_frame = pose.orientation
                     # Get transfrom matrix from table to wrist 
@@ -278,7 +283,8 @@ class ProgramManager(object):
 
                     #Get transfromation matrix from base to table
                     t_pos = self._table_pose.position
-
+                    print "-------Pose of table relative to base link----------"
+                    print self._table_pose
 
                     # original rotation in base link frame
 
@@ -299,7 +305,8 @@ class ProgramManager(object):
       
                     temp = tft.quaternion_from_matrix(b_w_matrix)
                     temp_pose.orientation = Quaternion(temp[0], temp[1], temp[2], temp[3])
-
+                    print "-----Pose of wrist relative to the Base Link------"
+                    print temp_pose
                     ps.pose = temp_pose
                 else: # relative to some tag
                     tag_w_pose = pose # temp_pose is tag_T_w, wrist relative to tag
@@ -406,7 +413,11 @@ class ProgramManager(object):
     # loads a program called filename into current memory 
     def _pickle_load(self, filename):
         try:
-            return pickle.load(open(filename + ".p", 'rb'))
+            ret = pickle.load(open(filename + ".p", 'rb'))
+            print "---- pickle load -----"
+            print filename
+            print ret
+            return ret
         except Exception as e:
             return -1
 
