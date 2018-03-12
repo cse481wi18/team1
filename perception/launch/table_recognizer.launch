@@ -10,6 +10,6 @@
   <param name="crop_max_y" value="2.05" />
   <param name="crop_min_y" value="-2.55" />
   <node pkg="perception" type="table_recognizer_main" name="table_recognizer_main" output="screen">
-    <remap from="cloud_in" to="/mock_point_cloud" />
+    <remap from="cloud_in" to="/head_camera/depth_registered/points" />
   </node>
 </launch>
