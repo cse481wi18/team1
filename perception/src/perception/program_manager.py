@@ -408,12 +408,12 @@ class ProgramManager(object):
 
     # saves current program to a pickle file name
     def _pickle_dump(self, filename, obj):
-        pickle.dump(obj, open(filename + ".p", 'wb'))
+        pickle.dump(obj, open("/home/team1/poses/"+filename + ".p", 'wb'))
 
     # loads a program called filename into current memory 
     def _pickle_load(self, filename):
         try:
-            ret = pickle.load(open(filename + ".p", 'rb'))
+            ret = pickle.load(open("/home/team1/poses/"+filename + ".p", 'rb'))
             print "---- pickle load -----"
             print filename
             print ret
