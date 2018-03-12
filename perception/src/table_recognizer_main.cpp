@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
 
     // LAB 34
     std::vector<perception_msgs::ObjectFeatures> dataset;
-     std::string data_dir("/home/team1/catkin_ws/src/cse481wi18/objects/combined_labels");
+     std::string data_dir("/home/team1/catkin_ws/src/cse481c/objects/combined_labels");
     perception::LoadData(data_dir, &dataset);
     perception::ObjectRecognizer recognizer(dataset);
 

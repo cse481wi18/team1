@@ -226,6 +226,8 @@ namespace perception {
             pose_norm.orientation.y = q_norm.y();
             pose_norm.orientation.z = q_norm.z();
 
+	ROS_INFO_STREAM("normalized pose: " << pose_norm);
+
         Object object;
             object.name = "table";
             object.confidence = .5;

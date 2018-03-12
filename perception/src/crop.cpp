@@ -50,7 +50,6 @@ void perception::Cropper::Callback(const sensor_msgs::PointCloud2& msg) {
     
     Eigen::Vector4f min_pt(min_x, min_y, min_z, 1);
     Eigen::Vector4f max_pt(max_x, max_y, max_z, 1);
-    ROS_INFO_STREAM("min: " << min_pt << ", max: " << max_pt);
     pcl::CropBox<PointC> crop;
     crop.setInputCloud(cloud);
     crop.setMin(min_pt);
