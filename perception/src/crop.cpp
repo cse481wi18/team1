@@ -38,12 +38,6 @@ void perception::Cropper::Callback(const sensor_msgs::PointCloud2& msg) {
     pcl::fromROSMsg(cloud_out, *cloud);
       ROS_INFO("Got point cloud with %ld points", cloud->size());
 
-  ros::NodeHandle nh;
-  ros::Publisher pub = nh.advertise<sensor_msgs::PointCloud2>("test", 1, true);
-  // while (pub.getNumSubscribers() == 0) {
-    //ros::spinOnce();
-  //}
-  pub.publish(cloud_out);
 
   PointCloudC::Ptr cropped_cloud(new PointCloudC());
   double min_x, min_y, min_z, max_x, max_y, max_z;

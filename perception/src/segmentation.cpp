@@ -22,12 +22,65 @@
 #include "geometry_msgs/Point.h"
 #include "pcl_ros/transforms.h"
 #include "tf/transform_listener.h"
+#include "Eigen/Dense"
+#include "math.h"
 
 
 typedef pcl::PointXYZRGB PointC;
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudC;
 
 namespace perception {
+    void NormalizeBox(Eigen::Matrix3f matrix, geometry_msgs::Vector3 dim, Eigen::Matrix3f* matrix_norm, geometry_msgs::Vector3* dim_norm) {
+        float dims[3];
+        dims[0] = dim.x;
+        dims[1] = dim.y;
+        dims[2] = dim.z;
+
+        float max_x = -2;
+        int max_x_index = -1;
+        for (int i = 0; i< 3; i++) {
+            if (fabs(matrix(0, i)) > max_x) {
+                max_x = fabs(matrix(0, i));
+                max_x_index = i;
+            }
+        }
+        if (matrix(0, max_x_index) < 0)
+            matrix_norm->col(0) = -1*matrix.col(max_x_index);
+        else 
+            matrix_norm->col(0) = matrix.col(max_x_index);
+        dim_norm->x = dims[max_x_index];
+
+
+        float max_y = -2;
+        int max_y_index = -1;
+        for (int i = 0; i< 3; i++) {
+            if (fabs(matrix(1, i)) > max_y) {
+                max_y = fabs(matrix(1, i));
+                max_y_index = i;
+            }
+        }
+       if (matrix(1, max_y_index) < 0)
+            matrix_norm->col(1) = -1*matrix.col(max_y_index);
+        else 
+            matrix_norm->col(1) = matrix.col(max_y_index);
+        dim_norm->y = dims[max_y_index];
+
+        float max_z = -2;
+        int max_z_index = -1;
+        for (int i = 0; i< 3; i++) {
+            if (fabs(matrix(2, i)) > max_z) {
+                max_z = fabs(matrix(2, i));
+                max_z_index = i;
+            }
+        }
+        if (matrix(2, max_z_index) < 0)
+            matrix_norm->col(2) = -1*matrix.col(max_z_index);
+        else 
+            matrix_norm->col(2) = matrix.col(max_z_index);
+        dim_norm->z = dims[max_z_index];
+    }
+
+
     void SegmentSurface(PointCloudC::Ptr cloud, pcl::PointIndices::Ptr indices, pcl::ModelCoefficients::Ptr coeff) {
         pcl::PointIndices indices_internal;
         pcl::SACSegmentation<PointC> seg;
@@ -149,61 +202,83 @@ namespace perception {
             dimensions.x = shape.dimensions[0];
             dimensions.y = shape.dimensions[1];
             dimensions.z = shape.dimensions[2];
+
         ROS_INFO("POSE %f %f %f", (float)  pose.position.x,(float)  pose.position.y,(float) pose.position.z);
         ROS_INFO("Dim %f %f %f", (float) dimensions.x,(float) dimensions.y,(float)dimensions.z);
+
+        Eigen::Quaternionf q(pose.orientation.w, pose.orientation.x, pose.orientation.y, pose.orientation.z);
+
+        Eigen::Matrix3f matrix(q);
+        Eigen::Matrix3f matrix_norm;
+        geometry_msgs::Vector3 dim_norm;
+        
+        NormalizeBox(matrix, dimensions, &matrix_norm, &dim_norm);
+        ROS_INFO_STREAM_THROTTLE(1, matrix);
+        ROS_INFO_STREAM_THROTTLE(1, matrix_norm);
+
+        Eigen::Quaternionf q_norm(matrix_norm);
+
+            geometry_msgs::Pose pose_norm;
+            pose_norm.position = pose.position;
+
+            pose_norm.orientation.w = q_norm.w();
+            pose_norm.orientation.x = q_norm.x();
+            pose_norm.orientation.y = q_norm.y();
+            pose_norm.orientation.z = q_norm.z();
 
         Object object;
             object.name = "table";
             object.confidence = .5;
             object.cloud = segmented;
-            object.pose = pose;
-            object.dimensions = dimensions;
+            object.pose = pose_norm;
+            object.dimensions = dim_norm;
 
             objects->push_back(object);
 
-        std::vector<pcl::PointIndices> object_indices;
-        SegmentSurfaceObjects(cloud, table_inliers, &object_indices);
-        // We are reusing the extract object created earlier in the callback.
-        extract.setNegative(true);
-        extract.filter(*segmented);
+        // std::vector<pcl::PointIndices> object_indices;
+        // SegmentSurfaceObjects(cloud, table_inliers, &object_indices);
+        // // We are reusing the extract object created earlier in the callback.
+        // extract.setNegative(true);
+        // extract.filter(*segmented);
 
-        for (size_t i = 0; i < object_indices.size(); ++i) {
-            // Reify indices into a point cloud of the object.
-            pcl::PointIndices::Ptr indices(new pcl::PointIndices);
-            *indices = object_indices[i];
-            PointCloudC::Ptr object_cloud(new PointCloudC());
-            // TODO: fill in object_cloud using indices
-            extract.setInputCloud(cloud);
-            extract.setNegative(false);
-            extract.setIndices(indices);
-            extract.filter(*object_cloud);
+        // for (size_t i = 0; i < object_indices.size(); ++i) {
+        //     // Reify indices into a point cloud of the object.
+        //     pcl::PointIndices::Ptr indices(new pcl::PointIndices);
+        //     *indices = object_indices[i];
+        //     PointCloudC::Ptr object_cloud(new PointCloudC());
+        //     // TODO: fill in object_cloud using indices
+        //     extract.setInputCloud(cloud);
+        //     extract.setNegative(false);
+        //     extract.setIndices(indices);
+        //     extract.filter(*object_cloud);
             
-            ROS_INFO("object to %ld points", object_cloud->size());
+        //     ROS_INFO("object to %ld points", object_cloud->size());
             
-            shape_msgs::SolidPrimitive shape;
-            geometry_msgs::Pose pose;
+        //     shape_msgs::SolidPrimitive shape;
+        //     geometry_msgs::Pose pose;
             
-            pcl::PointCloud<pcl::PointXYZRGB> output;
-           // GetAxisAlignedBoundingBox(object_cloud, &pose,&dimensions);
-            FitBox(*object_cloud, model,output,shape, pose);
+        //     pcl::PointCloud<pcl::PointXYZRGB> output;
+        //    // GetAxisAlignedBoundingBox(object_cloud, &pose,&dimensions);
+        //     FitBox(*object_cloud, model,output,shape, pose);
 
-            geometry_msgs::Vector3 dimensions;
-            dimensions.x = shape.dimensions[0];
-            dimensions.y = shape.dimensions[1];
-            dimensions.z = shape.dimensions[2];
+        //     geometry_msgs::Vector3 dimensions;
+        //     dimensions.x = shape.dimensions[0];
+        //     dimensions.y = shape.dimensions[1];
+        //     dimensions.z = shape.dimensions[2];
 
-           // pcl::PointCloud<pcl::PointXYZRGB>::Ptr output_ptr(*output);
+        //    // pcl::PointCloud<pcl::PointXYZRGB>::Ptr output_ptr(*output);
 
-            Object object;
-            object.name = "bucket";
-            object.confidence = .5;
-            object.cloud = object_cloud;
-            object.pose = pose;
-            object.dimensions = dimensions;
+        //     Object object;
+        //     object.name = "bucket";
+        //     object.confidence = .5;
+        //     object.cloud = object_cloud;
+        //     object.pose = pose;
+        //     object.dimensions = dimensions;
 
-            objects->push_back(object);
-        }
+        //     objects->push_back(object);
+        // }
     }
+
 
     void Segmenter::Callback(const sensor_msgs::PointCloud2& msg) {
         // PointCloudC::Ptr cloud_unfiltered(new PointCloudC());
