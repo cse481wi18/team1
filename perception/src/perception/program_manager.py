@@ -38,6 +38,8 @@ class ProgramManager(object):
 
         # current table and bucket pose, if detected
         self._table_pose = None # Pose type
+        self._table_pose_at_program_start = None 
+        self._table_request_unfilled = True
         self._bucket_pose = None
 
 
@@ -59,6 +61,7 @@ class ProgramManager(object):
     def _object_callback(self, msg):
         if msg.object_name == 'table':
             self._table_pose = msg.pose
+            self._table_request_unfilled = False
         elif msg.object_name == 'bucket':
             self._bucket_pose = msg.pose
 
@@ -72,6 +75,14 @@ class ProgramManager(object):
         self._current_program_name = name
         self._listener = tf.TransformListener()
         self._current_markers = self._reader.markers
+
+        self._table_request_unfilled = True
+        while self._table_request_unfilled:
+            pass
+
+        # constant throughout program creation
+        self._table_pose_at_program_start = self._table_pose
+
         self._relax_arm_controller()
     
 
@@ -116,7 +127,8 @@ class ProgramManager(object):
 
             # table has a pose relative to base frame, aka b_T_tag. We need tag_T_b.
             #Get transfromation matrix from table to base and invert it
-            t_pos = self._table_pose.position
+            
+            t_pos = self._table_pose_at_program_start.position
             print "--------Pose of table relative to base link-------"
             print self._table_pose
 
@@ -237,6 +249,13 @@ class ProgramManager(object):
             return -1
         self._start_arm_controller()
         self._current_markers = self._reader.markers
+
+        self._table_request_unfilled = True
+        while self._table_request_unfilled:
+            pass
+
+        # constant throughout program creation
+        self._table_pose_at_program_start = self._table_pose
 
         for (pose, relative, straight) in program:
             if pose == 'open_gripper': 
