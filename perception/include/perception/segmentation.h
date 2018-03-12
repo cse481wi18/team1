@@ -9,7 +9,6 @@
 #include "perception/object.h"
 #include "pcl/ModelCoefficients.h"
 #include "perception/box_fitter.h"
-#include "perception/object_recognizer.h"
 #include "tf/transform_listener.h"
 
 namespace perception {
@@ -54,15 +53,13 @@ class Segmenter {
   Segmenter(const ros::Publisher& surface_points_pub,
             const ros::Publisher& marker_pub,
             const ros::Publisher& object_pub,
-            const ros::Publisher& coord_pub,
-            const ObjectRecognizer& object_recognizer);
+            const ros::Publisher& coord_pub);
 
  private:
   ros::Publisher surface_points_pub_;
   ros::Publisher marker_pub_;
   ros::Publisher object_pub_;
   ros::Publisher coord_pub_;
-  ObjectRecognizer recognizer_;
   tf::TransformListener tf_listener_; 
 };
 }  // namespace perception

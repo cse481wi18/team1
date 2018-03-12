@@ -9,11 +9,12 @@
   <param name="crop_min_x" value="0.3" />
 
 
-  <param name="crop_max_z" value=".95" />
+  <param name="crop_max_z" value=".85" />
   <param name="crop_min_z" value="0.5" />
   
-  <param name="crop_max_y" value="1.0" />
-  <param name="crop_min_y" value="-1.0" />
+  <param name="crop_max_y" value=".75" />
+  <param name="crop_min_y" value="-.75" />
+
   <node pkg="perception" type="table_recognizer_main" name="table_recognizer_main" output="screen">
     <remap if="$(arg is_sim)" from="cloud_in" to="/mock_point_cloud" />
     <remap unless="$(arg is_sim)" from="cloud_in" to="/head_camera/depth_registered/points" />

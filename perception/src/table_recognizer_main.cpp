@@ -6,7 +6,6 @@
 #include "visualization_msgs/Marker.h"
 #include <vector>
 
-#include "perception/object_recognizer.h"
 #include "perception_msgs/ObjectFeatures.h"
 #include "perception_msgs/ObjectCoordinates.h"
 
@@ -29,15 +28,11 @@ int main(int argc, char** argv) {
         nh.advertise<sensor_msgs::PointCloud2>("object_cloud", 1, true);
 
     // LAB 34
-    std::vector<perception_msgs::ObjectFeatures> dataset;
-     std::string data_dir("/home/team1/catkin_ws/src/cse481c/objects/combined_labels");
-    perception::LoadData(data_dir, &dataset);
-    perception::ObjectRecognizer recognizer(dataset);
 
     ros::Publisher coord_pub =
         nh.advertise<perception_msgs::ObjectCoordinates>("object_coordinates", 1, true);
 
-    perception::Segmenter segmenter(table_pub, marker_pub, object_pub, coord_pub, recognizer);
+    perception::Segmenter segmenter(table_pub, marker_pub, object_pub, coord_pub);
 
     ros::Subscriber seg_sub =
         nh.subscribe("cropped_cloud", 1, &perception::Segmenter::Callback, &segmenter);
