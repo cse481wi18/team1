@@ -109,7 +109,7 @@ class CleaningManager(object):
         self._program_manager.run_program("intermediary_after_grab")
 
         # move to forward position
-        self._base.go_forward(BACKWARD_DISTANCE)
+        self._base.go_forward(FORWARD_DISTANCE)
         rospy.sleep(1)
 
 
@@ -129,7 +129,7 @@ class CleaningManager(object):
         self._program_manager.run_program("swiffer_base_link_2")
 
         # move to backward position
-        self._base.go_forward(-1 * FORWARD_DISTANCE)
+        self._base.go_forward(BACKWARD_DISTANCE)
         rospy.sleep(1)
 
         print "Releasing attachment"
