@@ -13,9 +13,12 @@ int main(int argc, char** argv) {
      // LAB 30
     ros::init(argc, argv, "table_recognizer_main");
     ros::NodeHandle nh;
+
     ros::Publisher crop_pub =
         nh.advertise<sensor_msgs::PointCloud2>("cropped_cloud", 1, true);
     perception::Cropper cropper(crop_pub);
+    ros::Subscriber flag_sub = nh.subscribe("perception_flag", 1, &perception::Cropper::FlagCallback, &cropper);
+
     ros::Subscriber sub =
         nh.subscribe("cloud_in", 1, &perception::Cropper::Callback, &cropper);
 

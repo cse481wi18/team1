@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 import rospy
 
-from std_msgs.msg import Int64
+from std_msgs.msg import Int64, Bool
 from navigator import Navigator
 import time
 from map_annotator import MapAnnotator
@@ -39,6 +39,8 @@ class CleaningManager(object):
         self._gripper = fetch_api.Gripper()
         self._torso = fetch_api.Torso()
         self._base = fetch_api.Base()
+
+        self._perception_flag_pub = rospy.Publisher('perception_flag', Bool, queue_size=5)
 
     def qr_callback(self, data):
         if DEMO:
@@ -86,7 +88,10 @@ class CleaningManager(object):
         
         print "Starting cleaning sequence"
         # set torso 
-        self._torso.set_height(0.32)
+        if DEMO:
+            self._torso.set_height(0.32)
+        else:
+            self._torso.set_height(.4)
 
         print "Opening gripper"
         # open gripper
@@ -102,6 +107,11 @@ class CleaningManager(object):
         # move to forward position
         self._base.go_forward(FORWARD_DISTANCE)
         rospy.sleep(1)
+
+
+        perception_flag = Bool(True)
+        self._perception_flag_pub.publish(perception_flag)
+        rospy.sleep(3)
 
         print "Sweeping sequence"
 
@@ -128,19 +138,6 @@ class CleaningManager(object):
         print "Finished and going home"
         # go home
         self._map_annotator.goto('home')
-
-
-
-        # if len(self._requests) > 0:
-        #     self.start_cleaning_sequence()
-        # else:
-        #     self._cleaning = False
-        #     print "No more requests"
-        #     result = self._map_annotator.goto('home')
-        #     # return to station
-
-
-       
 
 def main():
     rospy.init_node('cleaning_manager')

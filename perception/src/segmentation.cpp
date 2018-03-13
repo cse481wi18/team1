@@ -80,7 +80,7 @@ namespace perception {
     }
 
 
-    void SegmentSurface(PointCloudC::Ptr cloud, pcl::PointIndices::Ptr indices, pcl::ModelCoefficients::Ptr coeff) {
+    int SegmentSurface(PointCloudC::Ptr cloud, pcl::PointIndices::Ptr indices, pcl::ModelCoefficients::Ptr coeff) {
         pcl::PointIndices indices_internal;
         pcl::SACSegmentation<PointC> seg;
         ROS_INFO("beginning of segment surface");
@@ -117,9 +117,10 @@ namespace perception {
         // Comment this out
         //*indices = indices_internal;
         if (indices->indices.size() == 0) {
-            ROS_ERROR("Unable to find surface.");
-            return;
+            //ROS_ERROR("Unable to find surface.");
+            return false;
         }
+        return true;
     }
 
 
@@ -178,11 +179,15 @@ namespace perception {
         extract.setInputCloud(cloud);
         pcl::ModelCoefficients::Ptr model(new pcl::ModelCoefficients);
 
-        SegmentSurface(cloud, table_inliers, model);
+        int success = SegmentSurface(cloud, table_inliers, model);
         extract.setIndices(table_inliers);
         extract.filter(*segmented);
 
-        ROS_INFO("000Segmented to %ld points", segmented->size());
+        if (!success) {
+            return;
+        }
+
+        ROS_INFO("Segmented to %ld points", segmented->size());
         sensor_msgs::PointCloud2 msg_out;
         pcl::toROSMsg(*segmented, msg_out);
         surface_points_pub_.publish(msg_out);
@@ -226,23 +231,25 @@ namespace perception {
 	    ROS_INFO_STREAM("normalized pose: " << pose_norm);
 
         Object object;
-            object.name = "table";
-            object.confidence = .5;
-            object.cloud = segmented;
-            object.pose = pose_norm;
-            object.dimensions = dim_norm;
+        object.name = "table";
+        object.confidence = .5;
+        object.cloud = segmented;
+        object.pose = pose_norm;
+        object.dimensions = dim_norm;
 
-            objects->push_back(object);
+        objects->push_back(object);
     }
 
-
     void Segmenter::Callback(const sensor_msgs::PointCloud2& msg) {
-
+        
         PointCloudC::Ptr cloud_w_nan(new PointCloudC());
+
         pcl::fromROSMsg(msg, *cloud_w_nan);
         PointCloudC::Ptr cloud(new PointCloudC());
         std::vector<int> index;
          pcl::removeNaNFromPointCloud(*cloud_w_nan, *cloud, index);
+
+
        
         std::vector<Object> objects;
         SegmentTabletopScene(cloud, &objects, surface_points_pub_);

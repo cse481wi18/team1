@@ -14,9 +14,12 @@ typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudC;
 perception::Cropper::Cropper(const ros::Publisher& pub) : pub_(pub), tf_listener_() {}
 
 void perception::Cropper::Callback(const sensor_msgs::PointCloud2& msg) {
+    if (!should_crop_) {
+        return;
+    }
 
-
-  tf_listener_.waitForTransform("base_link", msg.header.frame_id,                     
+    should_crop_ = bool(false);
+    tf_listener_.waitForTransform("base_link", msg.header.frame_id,                     
                                     ros::Time(0), ros::Duration(5.0));                       
         tf::StampedTransform transform;                                                       
         try {                                                                                 
@@ -32,15 +35,14 @@ void perception::Cropper::Callback(const sensor_msgs::PointCloud2& msg) {
 
     sensor_msgs::PointCloud2 cloud_out;        
 
-
     pcl_ros::transformPointCloud("base_link", transform, msg, cloud_out);
-  PointCloudC::Ptr cloud(new PointCloudC());
+    PointCloudC::Ptr cloud(new PointCloudC());
     pcl::fromROSMsg(cloud_out, *cloud);
-      ROS_INFO("Got point cloud with %ld points", cloud->size());
+    ROS_INFO("Got point cloud with %ld points", cloud->size());
 
 
-  PointCloudC::Ptr cropped_cloud(new PointCloudC());
-  double min_x, min_y, min_z, max_x, max_y, max_z;
+    PointCloudC::Ptr cropped_cloud(new PointCloudC());
+    double min_x, min_y, min_z, max_x, max_y, max_z;
     ros::param::param("crop_min_x", min_x, 0.3);
     ros::param::param("crop_min_y", min_y, -1.0);
     ros::param::param("crop_min_z", min_z, 0.5);
@@ -59,4 +61,8 @@ void perception::Cropper::Callback(const sensor_msgs::PointCloud2& msg) {
     sensor_msgs::PointCloud2 msg_out;
     pcl::toROSMsg(*cropped_cloud, msg_out);
     pub_.publish(msg_out);
+}
+
+void  perception::Cropper::FlagCallback(const std_msgs::Bool& msg) {
+    should_crop_ = msg.data;
 }
