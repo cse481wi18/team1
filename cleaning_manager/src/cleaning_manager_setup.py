@@ -10,6 +10,7 @@ import fetch_api
 
 PERTURBANCE_DISTANCE = 0.07
 FORWARD_DISTANCE = 0.33
+BACKWARD_DISTANCE = -0.33
 DEMO = True
 DEMO_HEIGHT = 0.32
 
@@ -108,7 +109,7 @@ class CleaningManager(object):
         self._program_manager.run_program("intermediary_after_grab")
 
         # move to forward position
-        self._base.go_forward(FORWARD_DISTANCE)
+        self._base.go_forward(BACKWARD_DISTANCE)
         rospy.sleep(1)
 
 
