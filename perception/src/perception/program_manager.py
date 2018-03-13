@@ -76,9 +76,9 @@ class ProgramManager(object):
         self._listener = tf.TransformListener()
         self._current_markers = self._reader.markers
 
-        self._table_request_unfilled = True
-        while self._table_request_unfilled:
-            pass
+        # self._table_request_unfilled = True
+        # while self._table_request_unfilled:
+        #     pass
 
         # constant throughout program creation
         self._table_pose_at_program_start = self._table_pose
@@ -250,9 +250,9 @@ class ProgramManager(object):
         self._start_arm_controller()
         self._current_markers = self._reader.markers
 
-        self._table_request_unfilled = True
-        while self._table_request_unfilled:
-            pass
+        # self._table_request_unfilled = True
+        # while self._table_request_unfilled:
+        #     pass
 
         # constant throughout program creation
         self._table_pose_at_program_start = self._table_pose
