@@ -438,6 +438,7 @@ class ProgramManager(object):
             print ret
             return ret
         except Exception as e:
+            print "Failed to load " + filename
             return -1
 
     

@@ -2,9 +2,12 @@
                                                                                                        
 import rospy    
 import pickle
+import actionlib
 
 from geometry_msgs.msg import PoseWithCovarianceStamped, PoseWithCovariance, PoseStamped, Pose, Point, Quaternion                                                                                  
-                                                                                                       
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from actionlib_msgs.msg import GoalStatus
+
 class MapAnnotator(object):                                                                        
     """Listens to /joint_sta        pickle.dump(self._saved_poses, open("poses.p", 'wb'))
 tes and provides the latest joint angles.                                  
@@ -20,17 +23,25 @@ tes and provides the latest joint angles.
         # data is of type PoseWithCovarianceStamped, which has a PoseWithCovariance, which has a Pose
         self._last_pose = data.pose.pose # type Pose, which has Point and Quaternion
     
-    def __init__(self):
+    def __init__(self, filename):
         self._saved_poses = {}
         self._last_pose = None
+
+        self._filename = filename
+
         # acml_pose topic gives current pose
         rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, self._callback)
 
         # publish poses to move_base_simple/goal which will move the base (node nav_rviz does this)
-        self._pub = rospy.Publisher('move_base_simple/goal', PoseStamped, queue_size = 10)
+        # self._pub = rospy.Publisher('move_base_simple/goal', PoseStamped, queue_size = 10)
+
+        self._move_base_client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
+        self._move_base_client.wait_for_server()
 
         # boolean flag to note if the pose list bas been added/deleted/renamed since last checked
         self._pose_list_flag = False
+
+        self._timeout = 15
 
     def save(self, name):
         # wait for first pose message to come in
@@ -43,16 +54,24 @@ tes and provides the latest joint angles.
 
         self._pose_list_flag = True
 
-    # returns -1 if name is not a saved pose
+    # returns -1 if name is not a saved pose, 
     def goto(self, name):
         if name not in self._saved_poses:
             return -1
 
-        msg = PoseStamped()
-        msg.pose = self._saved_poses[name]
-        msg.header.frame_id = "map"
-        self._pub.publish(msg)
-        return 0
+        # msg = PoseStamped()
+        # msg.pose = self._saved_poses[name]
+        # msg.header.frame_id = "map"
+        # self._pub.publish(msg)
+
+        goal = MoveBaseGoal()
+        goal.target_pose.header.frame_id = 'map'
+        goal.target_pose.pose = self._saved_poses[name]
+
+        self._move_base_client.send_goal(goal)
+        self._move_base_client.wait_for_result()
+
+        return (self._move_base_client.get_state() == GoalStatus.SUCCEEDED)
 
     # returns list in Python 2, or view object in Python 3
     def list_poses(self): 
@@ -88,7 +107,7 @@ tes and provides the latest joint angles.
         return 0
 
     def pickle_dump(self):
-        pickle.dump(self._saved_poses, open("/home/team1/map_poses/demo_poses.p", 'wb'))
+        pickle.dump(self._saved_poses, open(self._filename, 'wb'))
 
     def get_all_poses(self):
         return self._saved_poses
@@ -96,7 +115,7 @@ tes and provides the latest joint angles.
 
     def pickle_load(self):
         try:
-            self._saved_poses = pickle.load(open("/home/team1/map_poses/demo_poses.p", 'rb'))
+            self._saved_poses = pickle.load(open(self._filename, 'rb'))
         except Exception as e:
             self._saved_poses = {}
     
@@ -108,7 +127,6 @@ tes and provides the latest joint angles.
         else:
             return False 
 
-        
         
 
         

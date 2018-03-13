@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     wait_for_time()
 
-    map_annotator = MapAnnotator()
+    map_annotator = MapAnnotator("/home/team1/map_poses/demo_poses.p")
     map_annotator.pickle_load()
 
     try:

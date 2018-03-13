@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   perception
+  fetch_api
 )
 
 ## System dependencies are found with CMake's conventions
