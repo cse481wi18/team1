@@ -11,6 +11,7 @@ import fetch_api
 PERTURBANCE_DISTANCE = 0.07
 FORWARD_DISTANCE = 0.33
 DEMO = True
+DEMO_HEIGHT = 0.32
 
 def wait_for_time():
     """Wait for simulated time to begin.
@@ -41,6 +42,8 @@ class CleaningManager(object):
         self._base = fetch_api.Base()
 
         self._perception_flag_pub = rospy.Publisher('perception_flag', Bool, queue_size=5)
+
+        self._torso.set_height(DEMO_HEIGHT)
 
     def qr_callback(self, data):
         if DEMO:
@@ -89,7 +92,7 @@ class CleaningManager(object):
         print "Starting cleaning sequence"
         # set torso 
         if DEMO:
-            self._torso.set_height(0.32)
+            self._torso.set_height(DEMO_HEIGHT)
         else:
             self._torso.set_height(.4)
 
