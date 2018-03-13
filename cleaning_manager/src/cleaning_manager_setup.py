@@ -75,8 +75,7 @@ class CleaningManager(object):
         print "starting table " + table
 
         # arm travel position
-        # self._program_manager.run_program("arm_travel")
-        self._move_arm_to_travel_pose()
+        self._program_manager.run_program("arm_travel")
 
         # go to table
         result = 0
@@ -128,24 +127,25 @@ class CleaningManager(object):
         self._program_manager.run_program("swiffer_base_link_1")
         self._program_manager.run_program("swiffer_base_link_2")
 
+        # move to backward position
+        self._base.go_forward(-1 * FORWARD_DISTANCE)
+        rospy.sleep(1)
+
         print "Releasing attachment"
         # intermediary before attachment release 
         self._program_manager.run_program("intermediary_before_release")
 
-        # grab attachment 
+        # release attachment 
         self._program_manager.run_program("attachment_release_v2")
 
         print "Moving arm to travel position"
         # arm travel position
-        self._move_arm_to_travel_pose()
+        self._program_manager.run_program("arm_travel")
 
         print "Finished and going home"
         # go home
         self._map_annotator.goto('home')
 
-    def _move_arm_to_travel_pose(self):
-        vals = [1.42933818366, 1.44473781631, 3.03138577215, -1.7982020959, 0.0878704374922, -1.45485173813, -2.92479267072]
-        self._arm.move_to_joints(fetch_api.ArmJoints.from_list(vals))
 
       
 
