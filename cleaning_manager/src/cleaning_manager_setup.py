@@ -10,7 +10,7 @@ import fetch_api
 
 PERTURBANCE_DISTANCE = 0.07
 FORWARD_DISTANCE = 0.33
-DEMO = False
+DEMO = True
 
 def wait_for_time():
     """Wait for simulated time to begin.
